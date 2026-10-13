@@ -32,7 +32,7 @@ export function extendAppWithTemplateMethods(app) {
       templatesGrid.innerHTML = `
         <div class="empty-state">
           <span class="empty-icon">📋</span>
-          <p>No templates created yet</p>
+          <p>هنوز الگویی ساخته نشده است</p>
           <p>Templates let you save common schedule patterns and reuse them across different days</p>
           <div class="empty-actions">
             <button class="btn btn-primary" onclick="app.showCreateTemplateModal()">
@@ -64,22 +64,22 @@ export function extendAppWithTemplateMethods(app) {
           <div class="template-body">
             <div class="template-stats">
               <div class="stat-item">
-                <span class="stat-label">Created:</span>
+                <span class="stat-label">ساخته‌شده:</span>
                 <span class="stat-value">${new Date(template.createdAt).toLocaleDateString()}</span>
               </div>
               <div class="stat-item">
-                <span class="stat-label">Last Used:</span>
+                <span class="stat-label">آخرین استفاده:</span>
                 <span class="stat-value">${lastUsed}</span>
               </div>
               <div class="stat-item">
-                <span class="stat-label">Uses:</span>
+                <span class="stat-label">دفعات استفاده:</span>
                 <span class="stat-value">${template.useCount || 0}</span>
               </div>
             </div>
             
             ${eventCount > 0 ? `
               <div class="template-preview">
-                <div class="preview-header">Schedule Preview:</div>
+                <div class="preview-header">پیش‌نمایش برنامه:</div>
                 <div class="preview-events">
                   ${template.events.slice(0, 3).map(event => `
                     <div class="preview-event">
@@ -94,7 +94,7 @@ export function extendAppWithTemplateMethods(app) {
               </div>
             ` : `
               <div class="template-empty">
-                <span class="empty-text">No events in this template</span>
+                <span class="empty-text">این الگو رویدادی ندارد</span>
               </div>
             `}
           </div>
@@ -145,7 +145,7 @@ export function extendAppWithTemplateMethods(app) {
       `).join('');
 
     if (!dayOptions) {
-      this.showNotification('No schedules available to create templates from. Create some events first!', 'warning');
+      this.showNotification('برنامه‌ای برای ساخت الگو وجود ندارد. ابتدا چند رویداد بسازید!', 'warning');
       return;
     }
 
@@ -155,34 +155,34 @@ export function extendAppWithTemplateMethods(app) {
           
           <!-- Template Info -->
           <div class="form-group">
-            <label for="templateName">Template Name *</label>
+            <label for="templateName">نام الگو *</label>
             <input type="text" id="templateName" placeholder="مثلاً: روز عادی مدرسه" required>
-            <div class="form-help">Give your template a descriptive name</div>
+            <div class="form-help">نامی گویا برای الگو بنویسید</div>
           </div>
           
           <div class="form-group">
-            <label for="templateDescription">Description</label>
-            <textarea id="templateDescription" rows="3" placeholder="Describe when and how to use this template..."></textarea>
-            <div class="form-help">Optional description to help identify this template</div>
+            <label for="templateتوضیحات">توضیحات</label>
+            <textarea id="templateتوضیحات" rows="3" placeholder="توضیح دهید این الگو چه زمانی و چگونه استفاده می‌شود…"></textarea>
+            <div class="form-help">توضیح اختیاری برای شناسایی بهتر الگو</div>
           </div>
           
           <!-- Source Selection -->
           <div class="form-group">
-            <label for="sourceDay">Create from existing schedule *</label>
+            <label for="sourceDay">ساخت از برنامه موجود *</label>
             <select id="sourceDay" required>
-              <option value="">Select a day to copy from...</option>
+              <option value="">روز مبدأ را انتخاب کنید…</option>
               ${dayOptions}
             </select>
-            <div class="form-help">Choose which day's schedule to use as the template base</div>
+            <div class="form-help">برنامه کدام روز به‌عنوان پایه الگو استفاده شود</div>
           </div>
           
           <!-- Preview Section -->
           <div class="form-group" id="previewSection" style="display: none;">
-            <label>Select events to include:</label>
+            <label>رویدادهای مورد نظر را انتخاب کنید:</label>
             <div class="events-preview" id="eventsPreview">
               <!-- Dynamic content -->
             </div>
-            <div class="form-help">Choose which events to include in your template</div>
+            <div class="form-help">مشخص کنید کدام رویدادها در الگو قرار بگیرند</div>
           </div>
           
         </form>
@@ -231,7 +231,7 @@ export function extendAppWithTemplateMethods(app) {
           </div>
         `).join('');
         
-        eventsPreview.innerHTML = eventsHTML || '<div class="no-events">No events found</div>';
+        eventsPreview.innerHTML = eventsHTML || '<div class="no-events">رویدادی یافت نشد</div>';
       } else {
         previewSection.style.display = 'none';
       }
@@ -244,7 +244,7 @@ export function extendAppWithTemplateMethods(app) {
   app.createTemplate = async function() {
     try {
       const name = document.getElementById('templateName').value.trim();
-      const description = document.getElementById('templateDescription').value.trim();
+      const description = document.getElementById('templateتوضیحات').value.trim();
       const sourceDay = document.getElementById('sourceDay').value;
 
       if (!name) {
@@ -326,16 +326,16 @@ export function extendAppWithTemplateMethods(app) {
           
           <!-- Template Selection -->
           <div class="form-group">
-            <label for="templateSelect">Select Template</label>
+            <label for="templateSelect">انتخاب الگو</label>
             <select id="templateSelect">
-              <option value="">Choose a template...</option>
+              <option value="">یک الگو انتخاب کنید…</option>
               ${templateOptions}
             </select>
           </div>
           
           <!-- Template Preview -->
           <div class="template-preview-section" id="templatePreviewSection" style="display: none;">
-            <div class="preview-header">Template Preview:</div>
+            <div class="preview-header">پیش‌نمایش الگو:</div>
             <div class="template-preview-content" id="templatePreviewContent">
               <!-- Dynamic content -->
             </div>
@@ -343,21 +343,21 @@ export function extendAppWithTemplateMethods(app) {
           
           <!-- Day Selection -->
           <div class="form-group">
-            <label>Apply to days:</label>
+            <label>اعمال در روزهای:</label>
             <div class="day-selection">
-              <label class="day-checkbox"><input type="checkbox" value="monday"> Monday</label>
-              <label class="day-checkbox"><input type="checkbox" value="tuesday"> Tuesday</label>
-              <label class="day-checkbox"><input type="checkbox" value="wednesday"> Wednesday</label>
-              <label class="day-checkbox"><input type="checkbox" value="thursday"> Thursday</label>
-              <label class="day-checkbox"><input type="checkbox" value="friday"> Friday</label>
-              <label class="day-checkbox"><input type="checkbox" value="saturday"> Saturday</label>
-              <label class="day-checkbox"><input type="checkbox" value="sunday"> Sunday</label>
+              <label class="day-checkbox"><input type="checkbox" value="monday"> دوشنبه</label>
+              <label class="day-checkbox"><input type="checkbox" value="tuesday"> سه‌شنبه</label>
+              <label class="day-checkbox"><input type="checkbox" value="wednesday"> چهارشنبه</label>
+              <label class="day-checkbox"><input type="checkbox" value="thursday"> پنج‌شنبه</label>
+              <label class="day-checkbox"><input type="checkbox" value="friday"> جمعه</label>
+              <label class="day-checkbox"><input type="checkbox" value="saturday"> شنبه</label>
+              <label class="day-checkbox"><input type="checkbox" value="sunday"> یکشنبه</label>
             </div>
             <div class="day-selection-helpers">
-              <button type="button" class="btn btn-sm btn-outline" onclick="app.selectWeekdays()">Weekdays</button>
-              <button type="button" class="btn btn-sm btn-outline" onclick="app.selectWeekends()">Weekends</button>
-              <button type="button" class="btn btn-sm btn-outline" onclick="app.selectAllDays()">All Days</button>
-              <button type="button" class="btn btn-sm btn-outline" onclick="app.clearDaySelection()">Clear</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="app.selectWeekdays()">روزهای کاری</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="app.selectWeekends()">روزهای تعطیل</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="app.selectAllDays()">همه روزها</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="app.clearDaySelection()">پاک کردن</button>
             </div>
           </div>
           
@@ -377,7 +377,7 @@ export function extendAppWithTemplateMethods(app) {
           
           <!-- Warning -->
           <div class="apply-warning">
-            <strong>⚠️ Warning:</strong> This will modify the selected day schedules. 
+            <strong>⚠️ هشدار:</strong> This will modify the selected day schedules. 
             If "Replace existing events" is checked, all current events on those days will be removed.
           </div>
           
@@ -431,7 +431,7 @@ export function extendAppWithTemplateMethods(app) {
     const previewContent = document.getElementById('templatePreviewContent');
     
     if (!template.events || template.events.length === 0) {
-      previewContent.innerHTML = '<div class="no-events">This template has no events</div>';
+      previewContent.innerHTML = '<div class="no-events">این الگو رویدادی ندارد</div>';
     } else {
       const eventsHTML = template.events.map(event => `
         <div class="preview-event-item">
@@ -603,7 +603,7 @@ export function extendAppWithTemplateMethods(app) {
           ` : ''}
         </div>
       </div>
-    `).join('') : '<div class="no-events">No events in this template</div>';
+    `).join('') : '<div class="no-events">این الگو رویدادی ندارد</div>';
 
     const modalContent = `
       <div class="template-preview-modal">
@@ -615,27 +615,27 @@ export function extendAppWithTemplateMethods(app) {
         
         <div class="preview-stats-section">
           <div class="preview-stat">
-            <span class="stat-label">Events:</span>
+            <span class="stat-label">رویدادها:</span>
             <span class="stat-value">${eventCount}</span>
           </div>
           <div class="preview-stat">
-            <span class="stat-label">Created:</span>
+            <span class="stat-label">ساخته‌شده:</span>
             <span class="stat-value">${new Date(template.createdAt).toLocaleDateString()}</span>
           </div>
           <div class="preview-stat">
-            <span class="stat-label">Used:</span>
+            <span class="stat-label">استفاده‌شده در:</span>
             <span class="stat-value">${template.useCount || 0} times</span>
           </div>
           ${template.lastUsed ? `
             <div class="preview-stat">
-              <span class="stat-label">Last Used:</span>
+              <span class="stat-label">آخرین استفاده:</span>
               <span class="stat-value">${new Date(template.lastUsed).toLocaleDateString()}</span>
             </div>
           ` : ''}
         </div>
         
         <div class="preview-events-section">
-          <h5>Schedule Events:</h5>
+          <h5>رویدادهای زمان‌بندی:</h5>
           <div class="preview-events-list">
             ${eventsHTML}
           </div>
@@ -732,22 +732,22 @@ export function extendAppWithTemplateMethods(app) {
       <div class="import-template-container">
         
         <div class="import-header">
-          <h4>📁 Import Schedule Template</h4>
-          <p>Import a previously exported template file</p>
+          <h4>📁 بازیابی الگوی زمان‌بندی</h4>
+          <p>یک فایل الگوی خروجی‌گرفته‌شده را بازیابی کنید</p>
         </div>
         
         <div class="import-area" id="importDragArea">
           <div class="import-icon">📋</div>
-          <div class="import-text">Drop template file here or click to browse</div>
-          <div class="import-subtext">JSON files only</div>
+          <div class="import-text">فایل الگو را اینجا رها کنید یا برای انتخاب کلیک کنید</div>
+          <div class="import-subtext">تنها فایل‌های JSON</div>
           <input type="file" id="templateFileInput" accept=".json" style="display: none;">
         </div>
         
         <div class="import-info">
-          <strong>📋 Supported Files:</strong>
+          <strong>📋 فایل‌های پشتیبانی‌شده:</strong>
           <ul>
-            <li>Exported template JSON files</li>
-            <li>Templates from other School Bell System installations</li>
+            <li>فایل‌های JSON خروجی‌گرفته‌شده از الگو</li>
+            <li>الگوهای سایر نصب‌های سامانه زنگ مدرسه</li>
           </ul>
         </div>
         

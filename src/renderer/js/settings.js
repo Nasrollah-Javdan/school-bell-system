@@ -489,7 +489,7 @@ export function extendAppWithSettingsMethods(app) {
     if (!confirmed) return;
     
     try {
-      this.showNotification('Restarting application...', 'info');
+      this.showNotification('در حال راه‌اندازی مجدد برنامه…', 'info');
       await window.electronAPI.restartApp();
       
     } catch (error) {
@@ -590,33 +590,31 @@ export function extendAppWithSettingsMethods(app) {
    * Handle reset data
    */
   app.handleResetData = async function() {
-    const confirmed = confirm('This will delete ALL data and reset the application to defaults! This cannot be undone. Are you sure?');
+    const confirmed = await this.confirmAction({
+      title: 'بازنشانی همه داده‌ها',
+      message: 'تمام برنامه‌های هفتگی، فایل‌های صوتی، الگوها، گزارش‌ها و تنظیمات حذف می‌شوند و برنامه به حالت اولیه برمی‌گردد.<br><br>پیش از حذف، یک نسخه پشتیبان خودکار در پوشه <code>backups</code> ساخته می‌شود. این کار قابل بازگشت است.',
+      confirmText: 'بله، بازنشانی کن',
+      danger: true
+    });
     if (!confirmed) return;
-    
-    const doubleConfirmed = confirm('Are you absolutely sure? This will delete all schedules, audio files, and settings!');
-    if (!doubleConfirmed) return;
-    
+
     try {
-      // Clear all data sections
-      await window.electronAPI.updateSettings({
-        volume: 80,
-        audioPath: '', // Will be set to userData/audio by data manager
-        logLevel: 'info',
-        autoStart: true,
-        maxLogEntries: 1000
-      });
-      
-      // Clear logs
-      await window.electronAPI.clearLogs();
-      
-      this.showNotification('بازنشانی داده‌ها انجام شد. لطفاً برنامه را دوباره اجرا کنید.', 'success');
-      console.log('Data reset completed');
-      
-      // Recommend restart
-      setTimeout(() => {
-        alert('Data has been reset. Please restart the application for changes to take effect.');
-      }, 1000);
-      
+      const result = await window.electronAPI.resetAllData();
+
+      // Pull the freshly seeded schedule back into the UI
+      await this.loadData();
+      await this.updateDashboard();
+      await this.updateSchedule();
+      await this.updateAudioLibrary();
+      await this.updateTemplates();
+
+      const backupNote = result.backup
+        ? ' نسخه پشتیبان در پوشه backups ساخته شد.'
+        : ' توجه: ساخت نسخه پشتیبان ناموفق بود.';
+      this.showNotification(
+        `بازنشانی انجام شد؛ ${toPersianDigits(result.events)} رویداد و ${toPersianDigits(result.audio)} فایل صوتی پیش‌فرض بازگردانده شد.${backupNote}`,
+        'success'
+      );
     } catch (error) {
       console.error('Failed to reset data:', error);
       this.showNotification('بازنشانی داده‌ها ناموفق بود', 'error');
@@ -733,26 +731,26 @@ export function extendAppWithSettingsMethods(app) {
   app.showSettingsHelp = function() {
     const helpContent = `
       <div class="settings-help">
-        <h4>Settings Help</h4>
+        <h4>راهنمای تنظیمات</h4>
         
         <div class="help-section">
-          <h5>Audio Settings</h5>
-          <p><strong>System Volume:</strong> Controls the playback volume for all bell audio (0-100%)</p>
-          <p><strong>Audio Files Path:</strong> Directory where audio files are stored</p>
+          <h5>تنظیمات صوتی</h5>
+          <p><strong>بلندی صدای سامانه:</strong> بلندی پخش همه صداهای زنگ را کنترل می‌کند (۰ تا ۱۰۰٪)</p>
+          <p><strong>مسیر فایل‌های صوتی:</strong> پوشه‌ای که فایل‌های صوتی در آن ذخیره می‌شوند</p>
         </div>
         
         <div class="help-section">
-          <h5>Application Settings</h5>
-          <p><strong>Auto Start:</strong> Automatically start the application when system boots</p>
-          <p><strong>Log Level:</strong> Controls how much detail is logged (Error < Warning < Info < Debug)</p>
-          <p><strong>Max Log Entries:</strong> Maximum number of log entries to keep (100-10,000)</p>
+          <h5>تنظیمات برنامه</h5>
+          <p><strong>اجرای خودکار:</strong> اجرای خودکار برنامه هنگام روشن شدن سیستم</p>
+          <p><strong>سطح ثبت گزارش:</strong> میزان جزئیات ثبت‌شده را کنترل می‌کند (خطا &lt; هشدار &lt; اطلاعات &lt; جزئیات فنی)</p>
+          <p><strong>بیشینه تعداد گزارش‌ها:</strong> بیشترین تعداد گزارش نگهداری‌شده (۱۰۰ تا ۱۰٬۰۰۰)</p>
         </div>
         
         <div class="help-section">
-          <h5>Data Management</h5>
-          <p><strong>Export Data:</strong> Save all your schedules, settings, and data to a backup file</p>
-          <p><strong>Import Data:</strong> Restore data from a previously exported backup file</p>
-          <p><strong>Reset Data:</strong> Clear all data and return to factory defaults</p>
+          <h5>مدیریت داده‌ها</h5>
+          <p><strong>خروجی داده‌ها:</strong> یک فایل پشتیبان از برنامه‌ها، تنظیمات و داده‌های شما می‌سازد</p>
+          <p><strong>بازیابی داده‌ها:</strong> بازیابی داده‌ها از یک فایل پشتیبان</p>
+          <p><strong>بازنشانی داده‌ها:</strong> پاک کردن همه داده‌ها و بازگشت به حالت اولیه</p>
         </div>
       </div>
     `;

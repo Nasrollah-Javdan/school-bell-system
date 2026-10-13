@@ -3,11 +3,14 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   
   getData: (section) => ipcRenderer.invoke('data-get', section),
+  resetAllData: () => ipcRenderer.invoke('data-reset-all'),
   
   getSchedule: (day) => ipcRenderer.invoke('schedule-get', day),
   addScheduleEvent: (day, eventData) => ipcRenderer.invoke('schedule-add-event', day, eventData),
   updateScheduleEvent: (day, eventId, updates) => ipcRenderer.invoke('schedule-update-event', day, eventId, updates),
   deleteScheduleEvent: (day, eventId) => ipcRenderer.invoke('schedule-delete-event', day, eventId),
+  applyDefaultSchedule: (days) => ipcRenderer.invoke('schedule-apply-default', days),
+  getDefaultSchedule: () => ipcRenderer.invoke('schedule-get-default'),
   
   getAudioFiles: () => ipcRenderer.invoke('audio-get-files'),
   addAudioFile: (audioData) => ipcRenderer.invoke('audio-add-file', audioData),

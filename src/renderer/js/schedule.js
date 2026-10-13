@@ -3,8 +3,101 @@
  * Simple, efficient schedule management with time picker and audio dropdown
  */
 
+import { toPersianDigits } from './fa.js';
+
 // Extend the main app with schedule methods
 export function extendAppWithScheduleMethods(app) {
+
+  /* ==========================================================================
+     Built-in default timetable
+     ========================================================================== */
+
+  /**
+   * Show a day picker, then replace those days with the built-in school
+   * timetable. The schedule is the same one seeded on a fresh install, so
+   * this doubles as "undo my changes".
+   */
+  app.showLoadDefaultScheduleModal = async function() {
+    const info = await window.electronAPI.getDefaultSchedule();
+
+    const periodRows = info.periods.map((p) =>
+      `<tr>
+         <td class="mono-cell" dir="ltr">${this.escapeHtml(p.time)}</td>
+         <td>${this.escapeHtml(p.name)}</td>
+       </tr>`).join('');
+
+    const dayBoxes = info.days.map((day) => {
+      // School days start ticked; optional days (پنج‌شنبه) start unticked
+      const isSeedDay = (info.seedDays || []).includes(day);
+      return `<label class="day-checkbox">
+         <input type="checkbox" value="${day}" ${isSeedDay ? 'checked' : ''}>
+         ${this.escapeHtml(this.dayLabel(day))}
+       </label>`;
+    }).join('');
+
+    const modalContent = `
+      <div class="template-form-container">
+        <div class="warning">
+          رویدادهای فعلی روزهای انتخاب‌شده <strong>جایگزین</strong> می‌شوند.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">روزهایی که برنامه پیش‌فرض روی آن‌ها اعمال شود</label>
+          <div class="day-selection" id="defaultDaySelection">${dayBoxes}</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">پیش‌نمایش برنامه</label>
+          <div class="detail-section">
+            <table class="preview-table">
+              <thead><tr><th>ساعت</th><th>رویداد</th></tr></thead>
+              <tbody>${periodRows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+
+    const buttons = [
+      { text: 'انصراف', class: 'btn btn-secondary', onclick: () => this.closeModal() },
+      {
+        text: 'اعمال برنامه پیش‌فرض',
+        class: 'btn btn-primary',
+        onclick: () => this.applyDefaultSchedule(info.days)
+      }
+    ];
+
+    this.showModal('برنامه پیش‌فرض مدرسه', modalContent, buttons);
+  };
+
+  /** Replace the ticked days with the default timetable. */
+  app.applyDefaultSchedule = async function(allDays) {
+    const checked = Array.from(
+      document.querySelectorAll('#defaultDaySelection input:checked')
+    ).map((i) => i.value);
+
+    if (checked.length === 0) {
+      this.showNotification('دست‌کم یک روز را انتخاب کنید', 'warning');
+      return;
+    }
+
+    try {
+      await window.electronAPI.applyDefaultSchedule(checked);
+      this.closeModal();
+      await this.loadData();
+      this.updateSchedule();
+      this.showNotification(
+        `برنامه پیش‌فرض روی ${toPersianDigits(checked.length)} روز اعمال شد`,
+        'success'
+      );
+    } catch (error) {
+      console.error('Failed to apply default schedule:', error);
+      this.showNotification('اعمال برنامه پیش‌فرض ناموفق بود', 'error');
+    }
+  };
+
+  /* ==========================================================================
+     Event editing
+     ========================================================================== */
 
   /**
    * Show add event modal
@@ -20,31 +113,31 @@ export function extendAppWithScheduleMethods(app) {
             
             <!-- Event Name -->
             <div class="form-group">
-              <label for="eventName">Event Name *</label>
+              <label for="eventName">نام رویداد *</label>
               <input type="text" id="eventName" placeholder="مثلاً: زنگ شروع کلاس" required>
             </div>
             
             <!-- Time Picker -->
             <div class="form-group">
-              <label for="eventTime">Time *</label>
+              <label for="eventTime">ساعت *</label>
               <input type="time" id="eventTime" required>
             </div>
             
             <!-- Audio Selection -->
             <div class="form-group">
-              <label>Audio Files</label>
+              <label>فایل‌های صوتی</label>
               <div class="audio-section">
                 <div class="audio-selector">
                   <select id="audioDropdown">
-                    <option value="">Select an audio file...</option>
+                    <option value="">یک فایل صوتی انتخاب کنید…</option>
                     ${audioFiles.map(file => `<option value="${file}">${file}</option>`).join('')}
                   </select>
-                  <button type="button" id="addAudioBtn" disabled>Add</button>
+                  <button type="button" id="addAudioBtn" disabled>افزودن</button>
                 </div>
                 
                 <!-- Selected Audio Display -->
                 <div class="selected-audio" id="selectedAudio">
-                  <div class="no-audio">No audio files selected</div>
+                  <div class="no-audio">هیچ فایل صوتی انتخاب نشده است</div>
                 </div>
               </div>
             </div>
@@ -59,8 +152,8 @@ export function extendAppWithScheduleMethods(app) {
             
             <!-- Notes -->
             <div class="form-group">
-              <label for="eventNotes">Notes (Optional)</label>
-              <textarea id="eventNotes" rows="3" placeholder="Additional notes..."></textarea>
+              <label for="eventNotes">یادداشت (اختیاری)</label>
+              <textarea id="eventNotes" rows="3" placeholder="یادداشت تکمیلی…"></textarea>
             </div>
             
           </form>
@@ -148,7 +241,7 @@ export function extendAppWithScheduleMethods(app) {
     const container = document.getElementById('selectedAudio');
     
     if (this.audioSequence.length === 0) {
-      container.innerHTML = '<div class="no-audio">No audio files selected</div>';
+      container.innerHTML = '<div class="no-audio">هیچ فایل صوتی انتخاب نشده است</div>';
       return;
     }
     
@@ -474,7 +567,7 @@ export function extendAppWithScheduleMethods(app) {
       const content = `
         <div class="template-selector">
           <p><strong>Apply template to ${this.currentDay}:</strong></p>
-          <div class="warning">⚠️ This will replace all existing events</div>
+          <div class="warning">⚠️ با این کار همه رویدادهای موجود جایگزین می‌شوند</div>
           <div class="templates-list">
             ${templatesList}
           </div>

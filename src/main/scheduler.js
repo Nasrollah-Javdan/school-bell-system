@@ -51,7 +51,7 @@ class Scheduler {
 
   async reloadSchedules() {
     await this.loadSchedules();
-    this.dataManager.logActivitySafe('scheduler_reloaded', 'Schedules reloaded');
+    this.dataManager.logActivitySafe('scheduler_reloaded', 'برنامه‌های زمان‌بندی دوباره بارگذاری شد');
   }
 
   async addEvent(day, event) {
@@ -240,7 +240,7 @@ class Scheduler {
     }
     
     this.isRunning = false;
-    this.dataManager.logActivitySafe('scheduler_stopped', 'Scheduler stopped');
+    this.dataManager.logActivitySafe('scheduler_stopped', 'زمان‌بند متوقف شد');
   }
 
   clearAllJobs() {
@@ -440,7 +440,7 @@ class Scheduler {
       this.stop();
       await this.audioPlayer.stop();
       
-      this.dataManager.logActivitySafe('emergency_stop', 'Emergency stop activated');
+      this.dataManager.logActivitySafe('emergency_stop', 'توقف اضطراری فعال شد');
       
       return { success: true, message: 'Emergency stop completed' };
       

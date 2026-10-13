@@ -32,10 +32,10 @@ export function extendAppWithAudioMethods(app) {
         audioGrid.innerHTML = `
           <div class="empty-state">
             <span class="empty-icon">🎵</span>
-            <p>No audio files uploaded yet</p>
-            <p>Upload audio files to use them in your bell schedules</p>
+            <p>هنوز هیچ فایل صوتی بارگذاری نشده است</p>
+            <p>فایل صوتی بارگذاری کنید تا در برنامه زنگ‌ها قابل استفاده باشد</p>
             <button class="btn btn-outline" onclick="app.showUploadAudioModal()">
-              📁 Upload Audio Files
+              📁 بارگذاری فایل صوتی
             </button>
           </div>
         `;
@@ -124,7 +124,7 @@ export function extendAppWithAudioMethods(app) {
               <div class="audio-file__name">${this.escapeHtml(audioFile.name)}</div>
               <div class="audio-file__filename" title="${this.escapeHtml(audioFile.filename)}">${this.escapeHtml(audioFile.filename)}</div>
               <div class="audio-file__meta">
-                <span class="audio-file__status" data-available="false">⚠️ Status unknown</span>
+                <span class="audio-file__status" data-available="false">⚠️ وضعیت نامشخص</span>
                 <span class="audio-file__size">${this.formatFileSize(audioFile.size)}</span>
               </div>
             </div>
@@ -256,7 +256,7 @@ export function extendAppWithAudioMethods(app) {
       this.updateAudioPlayingState(null, false);
       
       if (stopped) {
-        this.showNotification('Audio stopped', 'info');
+        this.showNotification('پخش صوت متوقف شد', 'info');
       } else {
         this.showNotification('هیچ صدایی در حال پخش نبود', 'info');
       }
@@ -335,33 +335,33 @@ export function extendAppWithAudioMethods(app) {
     const modalContent = `
       <div class="audio-details">
         <div class="detail-section">
-          <h4>📋 Basic Information</h4>
+          <h4>📋 اطلاعات پایه</h4>
           <div class="detail-grid">
             <div class="detail-item">
-              <strong>Name:</strong>
+              <strong>نام:</strong>
               <span>${this.escapeHtml(audioFile.name)}</span>
             </div>
             <div class="detail-item">
-              <strong>Filename:</strong>
+              <strong>نام فایل:</strong>
               <span class="monospace">${this.escapeHtml(audioFile.filename)}</span>
             </div>
             <div class="detail-item">
-              <strong>File Size:</strong>
+              <strong>حجم فایل:</strong>
               <span>${this.formatFileSize(audioFile.size)}</span>
             </div>
             <div class="detail-item">
-              <strong>File Type:</strong>
+              <strong>نوع فایل:</strong>
               <span>${this.getFileTypeDisplay(audioFile.filename)}</span>
             </div>
             <div class="detail-item">
-              <strong>Uploaded:</strong>
+              <strong>زمان بارگذاری:</strong>
               <span>${this.formatUploadDate(audioFile.uploadedAt)}</span>
             </div>
           </div>
         </div>
         
         <div class="detail-section">
-          <h4>🎵 Audio Controls</h4>
+          <h4>🎵 پخش و کنترل</h4>
           <div class="detail-controls">
             <button class="btn btn-success" onclick="app.testAudio('${audioFile.filename}')">
               ▶️ Play Audio
@@ -373,10 +373,10 @@ export function extendAppWithAudioMethods(app) {
         </div>
         
         <div class="detail-section">
-          <h4>📊 Usage Information</h4>
+          <h4>📊 اطلاعات استفاده</h4>
           <div class="usage-info">
             <p>This audio file can be used in schedule events. Once added to an event's audio sequence, it will play automatically when the event triggers.</p>
-            <p><strong>Usage in events:</strong> ${this.getAudioUsageCount(audioFile.filename)} event(s)</p>
+            <p><strong>تعداد استفاده در رویدادها:</strong> ${this.getAudioUsageCount(audioFile.filename)} event(s)</p>
           </div>
         </div>
       </div>
@@ -441,20 +441,20 @@ export function extendAppWithAudioMethods(app) {
     const modalContent = `
       <div class="upload-container">
         <div class="upload-header">
-          <h4>📁 Upload Audio Files</h4>
-          <p>Add audio files to use in your bell schedules</p>
+          <h4>📁 بارگذاری فایل صوتی</h4>
+          <p>فایل صوتی بارگذاری کنید تا در برنامه زنگ‌ها قابل استفاده باشد</p>
         </div>
         
         <div class="drag-area" id="audioDragArea">
           <div class="drag-icon">🎵</div>
-          <div class="drag-text">Drop audio files here or click to browse</div>
-          <div class="drag-subtext">Multiple files supported</div>
+          <div class="drag-text">فایل‌های صوتی را اینجا رها کنید یا برای انتخاب کلیک کنید</div>
+          <div class="drag-subtext">امکان انتخاب چند فایل</div>
           <input type="file" id="audioFileInput" multiple accept=".mp3,.wav,.m4a,.ogg,.aac" style="display: none;">
         </div>
         
         <div class="upload-info">
           <div class="supported-formats">
-            <strong>📋 Supported Formats:</strong>
+            <strong>📋 قالب‌های پشتیبانی‌شده:</strong>
             <div class="format-list">
               <span class="format-tag">MP3</span>
               <span class="format-tag">WAV</span>
@@ -465,11 +465,11 @@ export function extendAppWithAudioMethods(app) {
           </div>
           
           <div class="upload-limits">
-            <strong>📏 Limits:</strong>
+            <strong>📏 محدودیت‌ها:</strong>
             <ul>
-              <li>Maximum file size: 50MB per file</li>
-              <li>Recommended: Keep files under 10MB for best performance</li>
-              <li>Audio quality: 44.1kHz or higher recommended</li>
+              <li>بیشینه حجم هر فایل: ۵۰ مگابایت</li>
+              <li>توصیه می‌شود برای کارایی بهتر، حجم فایل‌ها زیر ۱۰ مگابایت باشد</li>
+              <li>کیفیت صوتی ۴۴٫۱ کیلوهرتز یا بالاتر توصیه می‌شود</li>
             </ul>
           </div>
         </div>
@@ -587,7 +587,7 @@ export function extendAppWithAudioMethods(app) {
         await window.electronAPI.uploadAudioFile({
           filename: safeName,
           buffer: buffer,
-          displayName: file.name
+          displayنام: file.name
         });
 
         successCount++;

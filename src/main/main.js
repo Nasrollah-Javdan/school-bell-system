@@ -20,6 +20,7 @@ const fs = require('fs').promises;
 const DataManager = require('./data-manager');
 const AudioPlayer = require('./audio-player');
 const Scheduler = require('./scheduler');
+const defaultSchedule = require('./default-schedule');
 
 // Disable hardware acceleration for better compatibility
 app.disableHardwareAcceleration();
@@ -55,6 +56,9 @@ function describeUpdaterError(err) {
   }
   if (/ETIMEDOUT|ESOCKETTIMEDOUT|ECONNRESET/i.test(message)) {
     return 'پاسخی از سرور به‌روزرسانی دریافت نشد. بعداً دوباره تلاش کنید.';
+  }
+  if (/No published versions|no published versions/i.test(message)) {
+    return 'هنوز نسخه‌ای در مخزن منتشر نشده است. برای دریافت به‌روزرسانی باید یک Release منتشر شود.';
   }
   if (/ECONNREFUSED|403|404|401/i.test(message)) {
     return 'دسترسی به مخزن به‌روزرسانی ممکن نشد. اتصال شبکه را بررسی کنید.';
@@ -686,13 +690,14 @@ class SchoolBellApp {
   }
 
   /**
-   * Application icon. Falls back to the bundled renderer asset when the
-   * build/ directory is absent (which is the common case in development).
+   * Application icon for the window and taskbar.
+   * Tries the packaged asset first; the build/ copy is only a dev fallback.
    */
   getAppIcon() {
     const candidates = [
       path.join(__dirname, '../renderer/assets/icons/icon.png'),
-      path.join(__dirname, '../../build/icon.png')
+      path.join(__dirname, '../../build/icon.png'),
+      path.join(__dirname, '../renderer/assets/icons/icon.ico')
     ];
 
     for (const iconPath of candidates) {
@@ -1464,6 +1469,14 @@ class SchoolBellApp {
       return this.dataManager.getData(section);
     });
 
+    // Wipe everything and restore the factory defaults
+    ipcMain.handle('data-reset-all', async () => {
+      const result = await this.dataManager.resetAllData();
+      await this.scheduler.reloadSchedules();
+      this.showAudioNotification('همه داده‌ها بازنشانی شد');
+      return result;
+    });
+
     ipcMain.handle('is-development-mode', () => {
       return this.isDevelopment;
     });
@@ -1471,6 +1484,22 @@ class SchoolBellApp {
     // Schedule operations
     ipcMain.handle('schedule-get', async (event, day) => {
       return this.dataManager.getSchedule(day);
+    });
+
+    // Apply the built-in Iranian elementary timetable
+    ipcMain.handle('schedule-apply-default', async (event, days) => {
+      const result = await this.dataManager.applyDefaultSchedule(days);
+      await this.scheduler.reloadSchedules();
+      this.showAudioNotification('برنامه پیش‌فرض مدرسه اعمال شد');
+      return result;
+    });
+
+    ipcMain.handle('schedule-get-default', async () => {
+      return {
+        periods: defaultSchedule.DEFAULT_PERIODS,
+        days: defaultSchedule.ALL_SELECTABLE_DAYS,
+        seedDays: defaultSchedule.SCHOOL_DAYS
+      };
     });
 
     ipcMain.handle('schedule-add-event', async (event, day, eventData) => {

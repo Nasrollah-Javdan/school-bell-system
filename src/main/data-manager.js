@@ -1,6 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { app } = require('electron');
+const defaultSchedule = require('./default-schedule');
 
 class DataManager {
   constructor() {
@@ -42,10 +43,222 @@ class DataManager {
     try {
       await this.loadData();
       const migrationResult = await this.ensureAudioDirectorySetup();
-      return { success: true, migrationResult };
+      const seeded = await this.seedIfFirstRun();
+      return { success: true, migrationResult, seeded };
     } catch (error) {
       throw error;
     }
+  }
+
+  /**
+   * Locate the audio files shipped with the installer.
+   * process.cwd() is unreliable for a packaged app, so the resources folder
+   * is checked first.
+   */
+  getBundledAudioPath() {
+    const candidates = [
+      app.isPackaged ? path.join(process.resourcesPath, 'audio') : null,
+      path.join(__dirname, '../../audio')
+    ].filter(Boolean);
+
+    return candidates.find((dir) => {
+      try {
+        return require('fs').existsSync(dir);
+      } catch {
+        return false;
+      }
+    });
+  }
+
+  /**
+   * Copy the bundled bell sounds into the user audio folder and register
+   * them, so a fresh install already has working audio.
+   * @returns {Promise<number>} number of files added
+   */
+  async installDefaultAudio() {
+    const source = this.getBundledAudioPath();
+    if (!source) return 0;
+
+    const settings = this.getSettings();
+    const target = settings.audioPath || path.join(app.getPath('userData'), 'audio');
+    await fs.mkdir(target, { recursive: true });
+
+    const names = Object.values(defaultSchedule.BELL_FILES);
+    let added = 0;
+
+    for (const filename of names) {
+      const from = path.join(source, filename);
+      const to = path.join(target, filename);
+      try {
+        await fs.access(from);
+      } catch {
+        continue;
+      }
+
+      const exists = await this.fileExists(to);
+      if (!exists) {
+        await fs.copyFile(from, to);
+      }
+
+      if (!this.data.audioFiles.some((f) => f.filename === filename)) {
+        const stat = await fs.stat(to);
+        this.data.audioFiles.push({
+          id: `default-audio-${filename}`,
+          filename,
+          name: defaultSchedule.buildDefaultAudioFiles().find((a) => a.filename === filename)?.displayName || filename,
+          displayName: defaultSchedule.buildDefaultAudioFiles().find((a) => a.filename === filename)?.displayName || filename,
+          size: stat.size,
+          uploadedAt: new Date().toISOString(),
+          isDefault: true
+        });
+        added++;
+      }
+    }
+
+    if (added > 0) {
+      await this.saveData();
+      this.logActivitySafe('default_audio_installed', `فایل‌های صوتی پیش‌فرض زنگ نصب شد (${added} فایل)`);
+    }
+
+    return added;
+  }
+
+  /**
+   * Seed a fresh installation with the default school timetable.
+   *
+   * Only runs when the user has no events at all, so it can never overwrite
+   * a schedule someone has already built.
+   */
+  async seedIfFirstRun() {
+    const hasEvents = Object.values(this.data.schedules || {})
+      .some((day) => Array.isArray(day) && day.length > 0);
+    if (hasEvents) return false;
+
+    const audioAdded = await this.installDefaultAudio();
+    const schedule = defaultSchedule.buildDefaultSchedule();
+
+    this.data.schedules = { ...this.data.schedules, ...schedule };
+    await this.saveData();
+
+    const total = Object.values(schedule).reduce((n, day) => n + day.length, 0);
+    this.logActivitySafe(
+      'default_schedule_seeded',
+      `برنامه پیش‌فرض مدرسه ایجاد شد (${total} رویداد در ${defaultSchedule.SCHOOL_DAYS.length} روز)`
+    );
+
+    console.log(`Seeded default school schedule (${total} events, ${audioAdded} audio files)`);
+    return true;
+  }
+
+  /**
+   * Apply the default timetable to the given days (or all school days).
+   * Existing events on those days are replaced.
+   * @param {string[]} [days]
+   */
+  async applyDefaultSchedule(days = defaultSchedule.SCHOOL_DAYS) {
+    await this.installDefaultAudio();
+
+    const schedule = defaultSchedule.buildDefaultSchedule(days);
+    for (const [day, events] of Object.entries(schedule)) {
+      this.data.schedules[day] = events;
+    }
+
+    await this.saveData();
+    const total = Object.values(schedule).reduce((n, d) => n + d.length, 0);
+    this.logActivitySafe('default_schedule_applied', `برنامه پیش‌فرض روی ${days.length} روز اعمال شد (${total} رویداد)`);
+    return { days, events: total };
+  }
+
+  /**
+   * Snapshot everything into `backups/pre-reset-<stamp>/` before a destructive
+   * change. Returns the folder path, or null if the snapshot failed.
+   *
+   * @param {string} [tag]
+   * @returns {Promise<string|null>}
+   */
+  async createDatedBackup(tag = 'pre-reset') {
+    const fsSync = require('fs');
+    try {
+      const userData = app.getPath('userData');
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const backupDir = path.join(userData, 'backups', `${tag}-${stamp}`);
+
+      await fs.mkdir(backupDir, { recursive: true });
+
+      for (const name of ['school-bell-data.json', 'school-bell-backup.json']) {
+        const from = path.join(userData, name);
+        if (fsSync.existsSync(from)) {
+          await fs.copyFile(from, path.join(backupDir, name));
+        }
+      }
+
+      const audioDir = path.join(userData, 'audio');
+      if (fsSync.existsSync(audioDir)) {
+        await fs.cp(audioDir, path.join(backupDir, 'audio'), { recursive: true });
+      }
+
+      return backupDir;
+    } catch (error) {
+      console.error('Dated backup failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Wipe every schedule, audio registration, template and log, then restore
+   * the factory defaults so the app comes back the way it arrived.
+   *
+   * A backup is taken first - a reset that cannot be undone would be a poor
+   * trade for a mis-click on a button labelled "delete everything".
+   *
+   * @returns {Promise<{backup: string|null, events: number, audio: number}>}
+   */
+  async resetAllData() {
+    const backupPath = await this.createDatedBackup('pre-reset');
+
+    this.data = this.freshDefaultData();
+    await this.saveData();
+
+    // Put the bundled bells and the school timetable back, so the app is
+    // usable immediately rather than blank.
+    await this.installDefaultAudio();
+    await this.seedIfFirstRun();
+
+    const events = Object.values(this.data.schedules)
+      .reduce((n, day) => n + day.length, 0);
+
+    console.log(`Data reset complete (${events} events restored, backup: ${backupPath})`);
+    return { backup: backupPath, events, audio: this.data.audioFiles.length };
+  }
+
+  /**
+   * Build a pristine data object.
+   *
+   * The result must not share any object with `this.defaultData`: updateSettings
+   * mutates `data.settings` in place, and a shallow copy would let a user's
+   * changes rewrite the factory defaults - making "reset" restore whatever the
+   * user last set instead of the real defaults.
+   *
+   * @returns {object}
+   */
+  freshDefaultData() {
+    return {
+      schedules: Object.fromEntries(
+        Object.keys(this.defaultData.schedules).map((day) => [day, []])
+      ),
+      audioFiles: [],
+      templates: [],
+      logs: [],
+      settings: {
+        ...this.defaultData.settings,
+        audioPath: path.join(app.getPath('userData'), 'audio')
+      },
+      metadata: {
+        version: this.defaultData.metadata.version,
+        created: new Date().toISOString(),
+        lastModified: new Date().toISOString()
+      }
+    };
   }
 
   async loadData() {
@@ -57,7 +270,7 @@ class DataManager {
         this.data = JSON.parse(rawData);
         this.data = this.validateAndMigrateData(this.data);
       } else {
-        this.data = { ...this.defaultData };
+        this.data = this.freshDefaultData();
         await this.saveData();
       }
       
@@ -67,7 +280,7 @@ class DataManager {
         return this.data;
       }
       
-      this.data = { ...this.defaultData };
+      this.data = this.freshDefaultData();
       return this.data;
     }
   }
@@ -459,7 +672,7 @@ class DataManager {
     Object.assign(settings, updates);
     
     await this.saveData();
-    this.logActivitySafe('settings_updated', 'Application settings updated');
+    this.logActivitySafe('settings_updated', 'تنظیمات برنامه به‌روزرسانی شد');
     
     return settings;
   }
@@ -503,7 +716,7 @@ class DataManager {
   async clearLogs() {
     this.data.logs = [];
     await this.saveData();
-    this.logActivitySafe('logs_cleared', 'Activity logs cleared');
+    this.logActivitySafe('logs_cleared', 'گزارش فعالیت‌ها پاک شد');
   }
 
   generateId() {
@@ -525,7 +738,7 @@ class DataManager {
         const backupData = await fs.readFile(this.backupPath, 'utf8');
         this.data = JSON.parse(backupData);
         await this.saveData();
-        this.logActivitySafe('data_recovered', 'Data recovered from backup file');
+        this.logActivitySafe('data_recovered', 'داده‌ها از فایل پشتیبان بازیابی شد');
         return true;
       }
     } catch (error) {
@@ -535,21 +748,31 @@ class DataManager {
   }
   
   validateAndMigrateData(data) {
-    const validatedData = { ...this.defaultData, ...data };
-    
+    // Start from a pristine copy, then layer the stored data on top. Building
+    // it this way guarantees nothing shares an object with defaultData, which
+    // would let in-place writes corrupt the factory defaults.
+    const validatedData = this.freshDefaultData();
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     days.forEach(day => {
-      if (!validatedData.schedules[day]) {
+      if (!Array.isArray(data?.schedules?.[day])) {
         validatedData.schedules[day] = [];
+      } else {
+        validatedData.schedules[day] = data.schedules[day];
       }
     });
-    
-    validatedData.settings = { ...this.defaultData.settings, ...data.settings };
-    
-    if (!validatedData.metadata) {
-      validatedData.metadata = this.defaultData.metadata;
-    }
-    
+
+    validatedData.settings = { ...this.defaultData.settings, ...(data?.settings || {}) };
+
+    validatedData.audioFiles = Array.isArray(data?.audioFiles) ? data.audioFiles : [];
+    validatedData.templates = Array.isArray(data?.templates) ? data.templates : [];
+    validatedData.logs = Array.isArray(data?.logs) ? data.logs : [];
+
+    validatedData.metadata = {
+      version: data?.metadata?.version || this.defaultData.metadata.version,
+      created: data?.metadata?.created || new Date().toISOString(),
+      lastModified: data?.metadata?.lastModified || new Date().toISOString()
+    };
+
     return validatedData;
   }
   
@@ -562,7 +785,7 @@ class DataManager {
       const importedData = JSON.parse(jsonData);
       this.data = this.validateAndMigrateData(importedData);
       await this.saveData();
-      this.logActivitySafe('data_imported', 'Data imported from external source');
+      this.logActivitySafe('data_imported', 'داده‌ها از یک منبع بیرونی بازیابی شد');
       return true;
     } catch (error) {
       throw error;
@@ -593,7 +816,7 @@ class DataManager {
         const migratedCount = await this.migrateAudioFiles(installAudioPath, userDataAudioPath);
         
         migrationInfo = { migrated: true, fileCount: migratedCount };
-        this.logActivitySafe('audio_migration', 'Audio files migrated to userData directory');
+        this.logActivitySafe('audio_migration', 'فایل‌های صوتی به پوشه داده کاربر منتقل شد');
       } else if (!settings.audioPath || settings.audioPath === '') {
         // Set default path if not set
         await this.updateSettings({ audioPath: userDataAudioPath });

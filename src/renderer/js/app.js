@@ -3,7 +3,7 @@ import { theme } from './theme.js';
 import { escapeHtml, capitalizeFirst, formatTimeUntil } from './utils.js';
 import {
   DAY_KEYS, DAY_NAMES_FA, toPersianDigits, formatNumber, formatDateFa,
-  formatTimeUntilFa, pluralFa
+  formatTimeUntilFa, countFa
 } from './fa.js';
 
 /**
@@ -177,6 +177,7 @@ export class SchoolBellApp {
       { id: 'addScheduleEventBtn', action: () => this.showAddEventModal() },
       { id: 'addFirstEventBtn', action: () => this.showAddEventModal() },
       { id: 'applyTemplateBtn', action: () => this.showApplyTemplateModal() },
+      { id: 'loadDefaultScheduleBtn', action: () => this.showLoadDefaultScheduleModal() },
       { id: 'uploadAudioBtn', action: () => this.showUploadAudioModal() },
       { id: 'uploadFirstAudioBtn', action: () => this.showUploadAudioModal() },
       { id: 'createTemplateBtn', action: () => this.showCreateTemplateModal() },
@@ -349,7 +350,7 @@ export class SchoolBellApp {
       });
     } else {
       this.elements.modalFooter.innerHTML = `
-        <button class="btn btn-secondary" type="button" onclick="app.closeModal()">Cancel</button>
+        <button class="btn btn-secondary" type="button" onclick="app.closeModal()">انصراف</button>
         <button class="btn btn-primary" type="button" onclick="app.closeModal()">OK</button>
       `;
     }
@@ -488,13 +489,13 @@ export class SchoolBellApp {
     
     if (!scheduleElement || !badgeElement) return;
 
-    badgeElement.textContent = pluralFa(todaySchedule.length, 'رویداد');
+    badgeElement.textContent = countFa(todaySchedule.length, 'رویداد');
 
     if (todaySchedule.length === 0) {
       scheduleElement.innerHTML = `
         <div class="empty-state">
           <span class="empty-icon">📅</span>
-          <p>No events scheduled for today</p>
+          <p>امروز رویدادی زمان‌بندی نشده است</p>
         </div>
       `;
       return;
@@ -544,7 +545,7 @@ export class SchoolBellApp {
         nextEventDisplay.innerHTML = `
           <div class="empty-state">
             <span class="empty-icon">⏰</span>
-            <p>No upcoming events scheduled</p>
+            <p>رویدادی در پیش نیست</p>
           </div>
         `;
         nextEventBadge.textContent = 'ندارد';
@@ -660,7 +661,7 @@ export class SchoolBellApp {
         <div class="empty-state">
           <span class="empty-icon">📅</span>
           <p>No events scheduled for ${this.escapeHtml(this.capitalizeFirst(this.currentDay || ''))}</p>
-          <button class="btn btn-outline" onclick="app.showAddEventModal()">Add First Event</button>
+          <button class="btn btn-outline" onclick="app.showAddEventModal()">افزودن نخستین رویداد</button>
         </div>
       `;
       return;
@@ -673,7 +674,7 @@ export class SchoolBellApp {
           <div class="event-name">${this.escapeHtml(event.name)}</div>
           <div class="event-details">
             ${event.audioSequence?.length || 0} audio file(s)
-            ${event.enabled ? '' : ' &middot; <span class="disabled-text">Disabled</span>'}
+            ${event.enabled ? '' : ' &middot; <span class="disabled-text">غیرفعال</span>'}
           </div>
         </div>
         <div class="event-actions">
@@ -699,7 +700,7 @@ export class SchoolBellApp {
             </div>
           ` : `
             <div class="no-audio-message">
-              ⚠️ No audio files selected &mdash; this event will not play any sound
+              ⚠️ هیچ فایل صوتی انتخاب نشده است &mdash; this event will not play any sound
             </div>
           `}
         </div>
@@ -726,7 +727,7 @@ export class SchoolBellApp {
         badge.className = 'day-tab__count';
         tab.appendChild(badge);
       }
-      badge.textContent = count > 0 ? pluralFa(count, 'رویداد') : 'بدون رویداد';
+      badge.textContent = count > 0 ? countFa(count, 'رویداد') : 'بدون رویداد';
 
       if (day === today) {
         tab.dataset.today = 'true';
@@ -755,7 +756,7 @@ export class SchoolBellApp {
       logsList.innerHTML = `
         <div class="empty-state">
           <span class="empty-icon">📝</span>
-          <p>No activity logged yet</p>
+          <p>هنوز فعالیتی ثبت نشده است</p>
         </div>
       `;
       return;
@@ -1119,8 +1120,8 @@ const logsHTML = [...logs].reverse().map(log => `
   showClearLogsModal() {
     const modalContent = `
       <div class="confirm-dialog">
-        <p>Are you sure you want to clear all activity logs?</p>
-        <p><strong>This action cannot be undone.</strong></p>
+        <p>آیا از پاک کردن همه گزارش‌های فعالیت مطمئن هستید؟</p>
+        <p><strong>این عملیات قابل بازگشت نیست.</strong></p>
       </div>
     `;
 

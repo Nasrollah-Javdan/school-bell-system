@@ -112,16 +112,19 @@ export const formatTimeUntilFa = (seconds) => {
 };
 
 /**
- * «۱ رویداد» / «۰ رویداد» / «۳ رویدادها»
+ * «۰ رویداد» / «۱ رویداد» / «۸ رویداد»
  *
- * Persian grammar: only 2 and above take the plural. Zero takes the singular,
- * so "۰ رویدادها" (0 events plural) would be wrong.
+ * Persian keeps the noun singular when it follows a numeral, so "۸ رویداد" is
+ * correct and "۸ رویدادها" is not. The «ها» suffix only appears when the noun
+ * stands on its own ("رویدادهای امروز"), which callers write themselves.
  */
-export const pluralFa = (count, singular, plural = `${singular}ها`) => {
+export const countFa = (count, singular) => {
   const n = Number(count) || 0;
-  const word = n >= 2 ? plural : singular;
-  return `${toPersianDigits(n)} ${word}`;
+  return `${toPersianDigits(n)} ${singular}`;
 };
+
+/** Backwards-compatible alias for callers still using the old name. */
+export const pluralFa = countFa;
 
 /** Uppercase helper kept because it is used for log-type labels. */
 export const toFaDigits = toPersianDigits;
