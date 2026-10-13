@@ -19,12 +19,30 @@ cd school-bell-system
 # Install dependencies
 npm install
 
-# Run in development mode
+# Run in development mode (Vite dev server + Electron with HMR)
 npm run dev
+
+# Bundle the renderer only
+npm run build:renderer
 
 # Test build (package without installer)
 npm run pack
 ```
+
+### How the two processes fit together
+
+```
+npm run dev
+  ├── vite                 serves src/renderer on http://localhost:5173
+  └── electron             waits for the port, then loads VITE_DEV_SERVER_URL
+```
+
+In production the renderer is bundled to `src/renderer/dist/` and served to
+Electron through the custom `app://` scheme registered in `src/main/main.js`.
+This is required because Chromium refuses to load ES modules over `file://`.
+
+If you change `src/main/*.js`, no renderer rebuild is needed — only
+`npm run build:renderer` rebuilds the frontend.
 
 ## 🚀 Building Installers
 
@@ -38,6 +56,8 @@ npm run build:win     # Windows .exe
 npm run build:mac     # macOS .dmg  
 npm run build:linux   # Linux .AppImage and .deb
 ```
+
+Each `build:*` script runs `vite build` first, so the renderer is always fresh.
 
 Build outputs go to the `dist/` directory.
 
@@ -111,11 +131,13 @@ This script will:
 
 ## 🔧 Build Configuration
 
-Build settings in `package.json` → `build` section:
+Build settings live in `package.json`:
 
+- **`build.files`** - ships `src/main`, the bundled `src/renderer/dist` and
+  the app icons. Renderer sources are deliberately excluded from the package.
+- **`build.extraResources`** - audio files and the tray icon
+- **Vite** (`vite.config.mjs`) - renderer root, output directory and dev port
 - **App ID**: `com.atizad.school-bell-system`
-- **Icons**: `build/icon.{ico,icns,png}`
-- **Extra Resources**: Audio files and tray icon
 - **Auto-updater**: GitHub releases integration
 - **Code Signing**: Disabled for open source
 
@@ -135,7 +157,18 @@ Build settings in `package.json` → `build` section:
    npm install --save-dev rimraf
    ```
 
-3. **Build fails with EBUSY error**
+3. **Blank window, console shows a CORS error**
+   
+   The renderer was loaded over `file://`. Make sure `src/main/main.js` is
+   loading `app://bundle/index.html` rather than calling `loadFile()`, and that
+   `npm run build:renderer` has been run.
+
+4. **Blank window and `src/renderer/dist` is missing**
+   ```bash
+   npm run build:renderer
+   ```
+
+5. **Build fails with EBUSY error**
    ```bash
    # Kill electron processes
    taskkill /F /IM electron.exe  # Windows
@@ -143,7 +176,7 @@ Build settings in `package.json` → `build` section:
    npm run clean
    ```
 
-4. **Missing native dependencies**
+6. **Missing native dependencies**
    ```bash
    npm run postinstall
    ```

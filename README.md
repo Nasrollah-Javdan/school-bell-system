@@ -1,144 +1,131 @@
-# School Bell System v1.0.2 - Multi-Platform Release
+# سامانه زنگ مدرسه
 
-🔔 **Automated school bell scheduling system with audio playback and authentication**
+برنامه‌ی دسکتاپ ویندوز برای زمان‌بندی و پخش خودکار زنگ مدرسه با ساعت، بدون نیاز به اینترنت در زمان اجرا.
 
-## ✨ Key Features
+<br>
 
-### 📅 **Smart Scheduling**
-- Weekly bell schedules with precise timing
-- Multiple events per day with custom names
-- Enable/disable individual events
-- Template system for reusing schedule patterns
+## ویژگی‌ها
 
-### 🎵 **Audio Management** 
-- Upload and manage audio files (MP3, WAV, M4A, OGG, AAC)
-- **🔒 Persistent audio storage** - Files survive app updates
-- Audio sequence builder with configurable repeat intervals
-- Volume control and audio testing
-- Support for multiple audio files per event
-- Automatic migration from installation directory
+| بخش | توضیح |
+|---|---|
+| **برنامه هفتگی** | تعریف زنگ برای هر روز هفته، با ترتیب دلخواه فایل‌های صوتی و تعداد تکرار |
+| **کتابخانه صوتی** | بارگذاری فایل‌های `mp3`، `wav`، `m4a`، `ogg`، `aac`، پخش آزمایشی و حذف گروهی |
+| **الگوها** | ساخت یک الگوی زمان‌بندی و اعمال آن روی چند روز به‌صورت یکجا |
+| **داشبورد** | برنامه‌ی امروز، نزدیک‌ترین زنگ با شمارش معکوس، آمار سامانه |
+| **گزارش فعالیت‌ها** | ثبت خودکار همه‌ی پخش‌ها و تغییرات |
+| **به‌روزرسانی خودکار** | بدون نیاز به حذف و نصب مجدد؛ داده‌ها دست‌نخورده باقی می‌مانند |
+| **پوسته روشن/تیره** | پیروی از تنظیمات ویندوز یا انتخاب دستی |
+| **اجرای پس‌زمینه** | بستن پنجره، برنامه را در سینی سیستم نگه می‌دارد |
 
-### 🔐 **Security & Authentication**
-- Secure admin authentication with encrypted storage
-- Session management with auto-logout
-- Machine-bound authentication data
-- Password change functionality
+<br>
 
-### 🔄 **Auto-Update System**
-- Automatic update checking every 4 hours
-- User-friendly update dialogs with progress
-- Delta updates for faster downloads
-- Manual update checking via Help menu
+## نیازمندی‌ها
 
-### 📊 **Management & Monitoring**
-- Activity logging with detailed history
-- System status monitoring
-- Data export/import functionality
-- Settings management interface
+- ویندوز ۱۰ یا ۱۱ (۶۴ بیتی)
+- برای دریافت به‌روزرسانی: اتصال اینترنت (خود برنامه بدون اینترنت هم کار می‌کند)
+- نیازی به نصب Node.js یا هر ابزار دیگری **روی سیستم مدرسه نیست**
 
-## 🚀 **Installation**
+<br>
 
-### **System Requirements**
-- Windows 10/11 (64-bit)
-- Audio output device (speakers/headphones)
-- 100MB free disk space
+## نصب
 
-### **Quick Start**
-1. Download the installer for your platform (Windows/macOS/Linux)
-2. Run the installer and follow the setup wizard
-3. Launch the application
-4. Create your admin account (first time only)
-5. Upload audio files and create schedules
+۱. فایل `School Bell System Setup <نسخه>.exe` را اجرا کنید.
+۲. مسیر نصب را انتخاب کنید (پیش‌فرض: `C:\Program Files\School Bell System`).
+۳. برنامه بلافاصله اجرا می‌شود. نیازی به ساخت حساب کاربری یا رمز عبور نیست.
 
-> **📢 Note**: Audio files are now stored in persistent storage and will survive app updates!
+> **هشدار ویندوز:** چون برنامه امضای دیجیتال ندارد، SmartScreen ممکن است هشدار بدهد.
+> روی **More info** و سپس **Run anyway** بزنید.
 
-## 📝 **First Time Setup Guide**
+<br>
 
-### **Step 1: Admin Account**
-- Create a secure username (3-20 characters)
-- Set a strong password (minimum 6 characters with numbers)
-- Your credentials are encrypted and machine-bound
+## شروع سریع
 
-### **Step 2: Audio Files**
-- Click "Audio Library" → "Upload Audio"
-- Drag and drop or browse for audio files
-- Supported formats: MP3, WAV, M4A, OGG, AAC
-- Test audio files before using in schedules
-- Configure repeat interval between audio files in Settings (0-30 seconds)
+۱. **کتابخانه صوتی** ← فایل‌های زنگ را بارگذاری کنید.
+۲. **برنامه هفتگی** ← روز مورد نظر را انتخاب و **افزودن رویداد** بزنید.
+۳. ساعت، نام و فایل‌های صوتی را تعیین و ذخیره کنید.
+۴. برنامه در پس‌زمینه اجرا می‌شود و در ساعت تعیین‌شده زنگ را پخش می‌کند.
 
-### **Step 3: Create Schedules**
-- Go to "Weekly Schedule"
-- Select a day and click "Add Event"
-- Set time, name, and audio sequence
-- Enable the event to activate scheduling
+<br>
 
-### **Step 4: Templates (Optional)**
-- Create templates from existing schedules
-- Apply templates to multiple days
-- Save common patterns for reuse
+## داده‌ها کجا ذخیره می‌شوند
 
-## 🔧 **Technical Details**
+همه‌ی داده‌ها **بیرون از پوشه نصب** و در این مسیر نگهداری می‌شوند:
 
-### **Built With**
-- **Electron 37.1.0** - Cross-platform desktop framework
-- **Node.js** - JavaScript runtime
-- **bcryptjs** - Password encryption
-- **node-cron** - Schedule management
-- **electron-updater** - Auto-update system
+```
+%APPDATA%\school-bell-system\
+├── school-bell-data.json      برنامه‌ها، تنظیمات، الگوها، فایل‌های صوتی ثبت‌شده
+├── school-bell-backup.json    نسخه پشتیبان غلتان
+├── audio\                     فایل‌های صوتی
+└── backups\                   نسخه‌های پشتیبان پیش از هر به‌روزرسانی
+```
 
-### **Security Features**
-- AES-256-GCM encryption for authentication data
-- Machine fingerprinting for data binding
-- Secure session management
-- No plaintext password storage
+نصب مجدد یا به‌روزرسانی برنامه **هرگز** این پوشه را دست نمی‌زند.
+از مسیر **تنظیمات ← باز کردن پوشه داده‌ها** می‌توانید مستقیم به آن بروید.
 
-### **Audio System**
-- Native OS audio integration + HTML5 Audio API
-- Platform-specific audio players (Windows Media Player, macOS afplay, Linux paplay)
-- **Persistent storage in userData directory** - survives app updates
-- Volume control and audio testing
-- **Configurable repeat intervals** between audio files (0-30 seconds)
-- Multiple format support with automatic detection
-- **Automatic migration** from old storage locations
+<br>
 
-## 📊 **What's New**
+## به‌روزرسانی خودکار
 
-### **v1.0.2 - Multi-Platform Release**
-- 🌍 **Full cross-platform support** - Windows, macOS, and Linux builds
-- 🍎 **Universal macOS** - Works on Intel and Apple Silicon Macs
-- 🐧 **Linux options** - AppImage (portable) and DEB packages
-- 🔄 **Unified auto-updater** - Works across all platforms
-- 📦 **Professional installers** - Platform-native installation experience
+برنامه هر ۴ ساعت و نیز هنگام اجرا، نسخه جدید را از مخزن GitHub بررسی می‌کند.
 
-### **v1.0.1 - Audio Persistence Update**
-- 🔒 **Fixed audio file persistence** - Files now survive app updates
-- 🔄 **Automatic migration** from installation directory to persistent storage
-- ⚙️ **Configurable repeat intervals** between audio files (0-30 seconds)
-- 🔧 **Improved password change UI** with proper modal dialogs
-- 📢 **User notifications** when audio files are migrated
-- 🛠️ **Enhanced error handling** and user feedback
+**تنظیمات ← به‌روزرسانی برنامه**
 
-### **v1.0.0 - Initial Release**
-- ✨ Initial release with full feature set
-- 🔐 Complete authentication system
-- 🎵 Audio management and playback
-- 📅 Weekly scheduling with templates
-- 🔄 Auto-update functionality
-- 📝 Activity logging and monitoring
+- **بررسی نسخه جدید** — بررسی دستی
+- **دانلود نسخه جدید** — پس از یافتن نسخه جدید
+- **نصب و راه‌اندازی مجدد** — پس از کامل شدن دانلود
 
-## 🐛 **Known Issues**
-- Manual installations previously cleared audio files ✅ **FIXED in v1.0.1**
+پیش از نصب هر به‌روزرسانی، یک نسخه پشتیبان تاریخ‌دار از برنامه‌ها و فایل‌های صوتی
+در `backups\` ساخته می‌شود (پنج نسخه‌ی آخر نگهداری می‌شود).
 
-## 💡 **Support & Feedback**
-- Report issues: [GitHub Issues](https://github.com/AtizaD/school-bell-system/issues)
-- Feature requests: [GitHub Discussions](https://github.com/AtizaD/school-bell-system/discussions)
-- Documentation: [README](https://github.com/AtizaD/school-bell-system#readme)
+> اگر شبکه مدرسه دسترسی به `github.com` را مسدود کند، بررسی به‌روزرسانی ناموفق می‌شود.
+> در این حالت باید نسخه جدید را دستی نصب کنید؛ داده‌ها باز هم حفظ می‌شوند.
 
-## 📜 **License**
-MIT License - See [LICENSE](https://github.com/AtizaD/school-bell-system/blob/main/LICENSE) for details
+<br>
 
----
+## کلیدهای میان‌بر
 
-**Download the installer below and start automating your school bell system today!** 🔔
+| کلید | کار |
+|---|---|
+| `Ctrl` + `N` | رویداد جدید |
+| `Ctrl` + `U` | بارگذاری صوت |
+| `Ctrl` + `L` | کتابخانه صوتی |
+| `Ctrl` + `T` | برنامه امروز |
+| `Alt` + `۱` تا `۶` | جابه‌جایی بین بخش‌ها |
+| `↑` `↓` `→` `←` | حرکت بین زبانه‌ها |
+| `Esc` | بستن پنجره |
 
-*Built with ❤️ by AtizaD using modern web technologies*
+<br>
+
+## ساخت از روی کد
+
+```bash
+npm install          # نصب وابستگی‌ها
+npm run dev          # اجرای Vite + Electron با بارگذاری زنده
+npm run build:win    # ساخت نصب‌کننده ویندوز
+```
+
+جزئیات بیشتر: [BUILD.md](BUILD.md)
+
+<br>
+
+## ساختار پروژه
+
+```
+src/
+├── main/                  پروسه اصلی (Node.js)
+│   ├── main.js            پنجره، منو، سینی سیستم، به‌روزرسانی، پروتکل app://
+│   ├── preload.js         تنها پل ارتباطی با رندرر
+│   ├── scheduler.js       زمان‌بندی با node-cron
+│   ├── audio-player.js    پخش صوتی
+│   └── data-manager.js    ذخیره‌سازی JSON با نوشتن اتمیک
+└── renderer/              رابط کاربری
+    ├── index.html
+    ├── css/               توکن‌های طراحی، پوسته روشن/تیره
+    └── js/                ماژول‌های ES
+```
+
+<br>
+
+## مجوز
+
+MIT — [AtizaD](https://github.com/AtizaD)

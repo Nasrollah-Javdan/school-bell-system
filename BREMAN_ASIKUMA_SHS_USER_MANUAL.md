@@ -1,268 +1,203 @@
-# Breman Asikuma Senior High School
-# Automated Bell System - User Manual
+# راهنمای کاربر — سامانه زنگ مدرسه
 
-**Developed by:** [Your Name]  
-**Version:** 1.0.0  
-**Date:** August 2025  
-**Institution:** Breman Asikuma Senior High School, Ghana
+راهنمای گام‌به‌گام برای استفاده‌ی روزمره در مدرسه.
 
----
+<br>
 
-## Table of Contents
-1. [System Overview](#system-overview)
-2. [Getting Started](#getting-started)
-3. [Authentication & Security](#authentication--security)
-4. [Managing Bell Schedules](#managing-bell-schedules)
-5. [Audio Management](#audio-management)
-6. [Templates](#templates)
-7. [Settings](#settings)
-8. [Troubleshooting](#troubleshooting)
-9. [Support Information](#support-information)
+## ۱. نصب برای اولین بار
 
----
+۱. فایل نصبی `School Bell System Setup <نسخه>.exe` را روی رایانه‌ی مدرسه اجرا کنید.
+۲. اگر ویندوز هشدار داد، روی **More info** و سپس **Run anyway** بزنید.
+۳. مسیر نصب را تأیید کنید. پیشنهاد می‌شود در `C:\Program Files\School Bell System` نصب شود.
+۴. برنامه خودکار اجرا می‌شود. **هیچ حساب کاربری یا رمزی لازم نیست.**
 
-## System Overview
+<br>
 
-The Automated Bell System is a desktop application designed specifically for Breman Asikuma SHS to manage and automate the school's daily bell schedule. The system runs continuously in the background and automatically plays scheduled bell sounds at the correct times.
+## ۲. آشنایی با محیط برنامه
 
-### Key Features
-- **Automated Scheduling**: Set weekly bell schedules that run automatically
-- **Audio Management**: Upload and organize custom bell sounds
-- **Security**: Password-protected access with machine-bound security
-- **Templates**: Save and reuse common schedule patterns
-- **Background Operation**: Runs silently in system tray
-- **Auto-Start**: Automatically starts with Windows
-- **Backup & Export**: Data backup and schedule export capabilities
+برنامه دو بخش دارد:
 
----
+- **نوار کناری (راست):** شش بخش برنامه
+  - 📊 داشبورد
+  - 📅 برنامه هفتگی
+  - 🎵 کتابخانه صوتی
+  - 📋 الگوها
+  - 📝 گزارش فعالیت‌ها
+  - ⚙️ تنظیمات
+- **نوار بالا:** نزدیک‌ترین زنگ، وضعیت سامانه، ساعت و دکمه‌ی پوسته
 
-## Getting Started
+<br>
 
-### First Launch
-1. Double-click the Bell System icon on your desktop
-2. The application will start and appear in your system tray (bottom-right corner)
-3. Right-click the tray icon and select "Show Window" to open the main interface
+## ۳. بارگذاری فایل‌های صوتی (قدم اول)
 
-### Initial Setup
-1. **Set Master Password**: On first launch, you'll be prompted to create a master password
-   - Choose a strong password that staff can remember
-   - This password protects all system settings and schedules
-   - Write it down and store it securely
+پیش از ساخت هر زنگ باید فایل صوتی داشته باشید.
 
-2. **Upload Bell Audio Files**: 
-   - Go to the "Audio Library" tab
-   - Click "Upload Audio Files"
-   - Select your bell sound files (MP3, WAV formats supported)
-   - Test each sound using the play button
+**کتابخانه صوتی ← بارگذاری صوت**
 
-3. **Create Your First Schedule**:
-   - Go to the "Schedule" tab
-   - Click on time slots to add bell events
-   - Select the appropriate audio file for each event
-   - Save your schedule
+- فایل‌ها را روی کادر بکشید و رها کنید، یا برای انتخاب کلیک کنید
+- قالب‌های مجاز: `MP3` `WAV` `M4A` `OGG` `AAC`
+- بیشینه حجم هر فایل: ۵۰ مگابایت (زیر ۱۰ مگابایت بهتر است)
+- چند فایل را هم‌زمان می‌توانید انتخاب کنید
 
----
+پس از بارگذاری، هر فایل یک کارت در صفحه ظاهر می‌شود که وضعیت موجود بودن،
+حجم، نوع و زمان بارگذاری را نشان می‌دهد. با **▶️ پخش** می‌توانید قبل از استفاده گوش کنید.
 
-## Authentication & Security
+<br>
 
-### Logging In
-- When you open the application, enter your master password
-- The system will automatically log you out after 30 minutes of inactivity for security
+## ۴. ساخت یک زنگ
 
-### Security Features
-- All data is encrypted and tied to this specific computer
-- Cannot be transferred to other computers without proper export/import
-- Automatic session timeout prevents unauthorized access
-- All password data is securely hashed
+**برنامه هفتگی ← افزودن رویداد**
 
-### Changing Password
-1. Go to Settings tab
-2. Click "Change Master Password"
-3. Enter current password
-4. Enter new password twice
-5. Click "Update Password"
+| فیلد | توضیح |
+|---|---|
+| **نام رویداد** | مثلاً «زنگ شروع کلاس» |
+| **ساعت** | ساعت و دقیقه‌ی پخش |
+| **فایل‌های صوتی** | یک یا چند فایل، به همان ترتیبی که می‌خواهید پخش شوند |
+| **تکرار** | هر فایل چند بار پخش شود (۱ تا ۱۰) |
+| **یادداشت** | اختیاری |
 
----
+**نکته:** با دکمه‌های ↑ و ↓ ترتیب پخش فایل‌ها را جابه‌جا کنید، یا کارت را بکشید.
 
-## Managing Bell Schedules
+پس از ذخیره، رویداد در همان روز با ساعت و تعداد فایل‌ها نمایش داده می‌شود.
 
-### Weekly Schedule View
-The schedule is organized by days of the week (Monday-Sunday) with time slots from 6:00 AM to 6:00 PM.
+> ⚠️ رویدادی که فایل صوتی نداشته باشد، صدایی پخش نمی‌کند.
 
-### Adding Bell Events
-1. Click on any time slot in the schedule grid
-2. Select the audio file to play
-3. Choose repeat count (how many times to play the sound)
-4. Click "Save Event"
+<br>
 
-### Event Types & Timing
-- **Regular Classes**: Typically use single bell sound
-- **Break Times**: May use different tone or multiple rings
-- **Assembly**: Special announcement sounds
-- **Closing**: End-of-day bell sequence
+## ۵. تست کردن یک رویداد
 
-### Editing Events
-1. Click on an existing event (colored time slot)
-2. Modify the audio file or repeat settings
-3. Click "Update Event" or "Delete Event"
+روی **▶️ آزمون** در کارت هر رویداد بزنید تا بدون انتظار تا ساعت واقعی، همان لحظه پخش شود.
 
-### Copying Events
-- Right-click an event to copy it
-- Click another time slot and paste to duplicate
+<br>
 
----
+## ۶. استفاده از الگوها
 
-## Audio Management
+اگر برنامه‌ی یکسانی برای چند روز لازم دارید:
 
-### Supported Formats
-- MP3 (recommended)
-- WAV
-- Maximum file size: 50MB per file
+**الگوها ← ساخت الگو**
 
-### Adding Audio Files
-1. Go to "Audio Library" tab
-2. Click "Upload Audio Files"
-3. Select one or multiple files
-4. Files are automatically copied to the system's audio folder
+۱. یک روز مبدأ انتخاب کنید.
+۲. رویدادهای مورد نظر را تیک بزنید.
+۳. الگو را ذخیره کنید.
 
-### Testing Audio
-- Use the play button next to each audio file
-- Adjust system volume as needed
-- Test with actual speakers/PA system
+سپس در **برنامه هفتگی ← اعمال الگو** می‌توانید الگو را روی یک یا چند روز اعمال کنید.
 
-### Audio File Organization
-- Name files descriptively (e.g., "Morning_Bell.mp3", "Break_Bell.wav")
-- Keep file names simple (avoid special characters)
-- Organize by purpose (class bells, break bells, etc.)
+گزینه‌ی «جایگزینی رویدادهای موجود» را فعال یا غیرفعال کنید تا مشخص شود
+رویدادهای قبلی آن روزها باقی بمانند یا جایگزین شوند.
 
----
+<br>
 
-## Templates
+## ۷. کار در پس‌زمینه
 
-Templates allow you to save common schedule patterns and reuse them quickly.
+بستن پنجره، برنامه را نمی‌بندد؛ در **سینی سیستم** (کنار ساعت) باقی می‌ماند و زنگ‌ها را پخش می‌کند.
 
-### Creating Templates
-1. Set up a complete daily schedule
-2. Go to "Templates" tab
-3. Click "Save Current Schedule as Template"
-4. Give it a descriptive name (e.g., "Normal School Day", "Exam Schedule")
+- برای بازگرداندن: روی نماد برنامه **دوبار کلیک** کنید
+- برای خروج کامل: روی نماد **راست‌کلیک ← خروج**
 
-### Using Templates
-1. Go to "Templates" tab
-2. Select a template from the list
-3. Click "Apply to Schedule"
-4. Choose which days to apply it to
-5. Confirm the changes
+> اگر نماد را در سینی نمی‌بینید، در تنظیمات ویندوز به
+> «Taskbar settings ← Other system tray icons» بروید و آن را فعال کنید.
 
-### Template Management
-- Edit existing templates by loading and modifying them
-- Delete unused templates to keep the list clean
-- Export templates for backup or sharing
+<br>
 
----
+## ۸. تغییر پوسته
 
-## Settings
+**تنظیمات ← ظاهر برنامه ← پوسته**
 
-### General Settings
-- **Auto-Start**: Enable/disable starting with Windows
-- **Minimize to Tray**: Keep application running in background
-- **Audio Volume**: Master volume control for all bell sounds
+- **مطابق سیستم‌عامل** — پیش‌فرض، هماهنگ با ویندوز
+- **روشن**
+- **تیره**
 
-### Schedule Settings
-- **Enable Schedule**: Turn the automatic schedule on/off
-- **Holiday Mode**: Temporarily disable all bells
-- **Time Zone**: Ensure correct time zone is set
+دکمه‌ی 🖥️ در پایین نوار کناری هم پوسته را سریع عوض می‌کند.
 
-### Backup & Export
-- **Export Schedule**: Save schedule data to file
-- **Import Schedule**: Load schedule from backup file
-- **Data Backup**: Automatic daily backups are created
+<br>
 
----
+## ۹. تنظیمات مهم
 
-## Troubleshooting
+| تنظیم | کاربرد |
+|---|---|
+| **بلندی صدا** | بلندی پخش همه‌ی زنگ‌ها (۰ تا ۱۰۰) |
+| **مسیر فایل‌های صوتی** | محل ذخیره‌ی فایل‌ها — پیشنهاد می‌شود روی یک پارتیشن پایدار بماند |
+| **فاصله تکرار** | مکث میان پخش‌های پیاپی یک زنگ (پیش‌فرض ۳ ثانیه) |
+| **اجرای خودکار** | اجرای برنامه با روشن شدن ویندوز |
+| **سطح ثبت گزارش** | اگر مشکلی دیدید، روی «جزئیات فنی» بگذارید |
 
-### Common Issues
+<br>
 
-**Bell doesn't ring at scheduled time:**
-- Check that "Enable Schedule" is turned on in Settings
-- Verify system time is correct
-- Ensure audio files are not corrupted
-- Check system volume levels
+## ۱۰. به‌روزرسانی برنامه
 
-**Can't hear bell sounds:**
-- Test audio files in the Audio Library
-- Check computer speakers/PA system connection
-- Verify system volume is not muted
-- Try different audio files
+**تنظیمات ← به‌روزرسانی برنامه**
 
-**Application won't start:**
-- Check if another instance is already running (look in system tray)
-- Restart computer and try again
-- Run as administrator if needed
+۱. **بررسی نسخه جدید** را بزنید.
+۲. اگر نسخه‌ی جدیدی بود، **دانلود نسخه جدید** بزنید.
+۳. پس از پایان دانلود، **نصب و راه‌اندازی مجدد** را بزنید.
 
-**Forgot master password:**
-- Contact system administrator
-- Password cannot be recovered (security feature)
-- May require reinstallation with data loss
+**نیازی به حذف و نصب مجدد نیست و داده‌های شما حفظ می‌شود.**
+پیش از نصب، یک نسخه پشتیبان خودکار از برنامه‌ها و فایل‌های صوتی گرفته می‌شود.
 
-### System Requirements
-- Windows 10 or later
-- Minimum 100MB free disk space
-- Audio output capability (speakers/PA system)
-- Administrator privileges for installation
+اگر هشداری مثل «اتصال برقرار نشد» دیدید، شبکه‌ی مدرسه به `github.com` دسترسی ندارد.
+در آن حالت نسخه جدید را دستی نصب کنید؛ داده‌ها باز هم دست‌نخورده می‌مانند.
 
----
+<br>
 
-## Daily Operations
+## ۱۱. پشتیبان‌گیری از داده‌ها
 
-### Morning Startup
-1. System should start automatically with Windows
-2. Check system tray for the bell icon
-3. Verify current day's schedule is active
-4. Test audio connection with PA system
+**تنظیمات ← مدیریت داده‌ها**
 
-### During School Hours
-- System runs automatically - no user intervention needed
-- Monitor for any missed bells or audio issues
-- System tray icon shows green when schedule is active
+| دکمه | کار |
+|---|---|
+| **خروجی کامل داده‌ها** | یک فایل پشتیبان می‌سازد — هر وقت خواستید این کار را بکنید |
+| **بازیابی داده‌ها** | بازگرداندن از فایل پشتیبان |
+| **بازنشانی همه داده‌ها** | ⚠️ پاک کردن کامل — فقط در صورت اطمینان |
 
-### End of Day
-- System continues running for next day
-- No need to shut down unless maintenance required
-- Data is automatically saved
+مسیر داده‌ها:
+```
+%APPDATA%\school-bell-system\
+```
+با **باز کردن پوشه داده‌ها** در همان صفحه می‌توانید مستقیم به آن بروید و
+روی یک فلش کپی بگیرید.
 
-### Weekly Maintenance
-- Review and adjust schedule as needed
-- Test all audio files monthly
-- Check for any system updates
-- Verify backup files are being created
+> پیشنهاد: ماهی یک‌بار خروجی بگیرید و روی فلش نگه دارید.
 
----
+<br>
 
-## Support Information
+## ۱۲. رفع اشکال
 
-### For Technical Issues:
-**Developer:** [Your Name]  
-**Contact:** [Your Phone Number]  
-**Email:** [Your Email]  
+| مشکل | راه‌حل |
+|---|---|
+| صدایی پخش نمی‌شود | بلندی صدا را در تنظیمات بالا ببرید و کارت فایل را بررسی کنید (حالت «موجود») |
+| نوشته «در حافظه موجود نیست» | فایل صوتی از مسیر ذخیره‌شده حذف یا جابه‌جا شده — دوباره بارگذاری کنید |
+| برنامه باز نمی‌شود | در تنظیمات ویندوز، «Always run this program» را برای نماد برنامه بزنید |
+| نماد در سینی سیستم نیست | Taskbar settings ← Other system tray icons |
+| برنامه با هر باز شدن بسته می‌شود | در تنظیمات، «اجرای خودکار» را روشن کنید |
+| بررسی به‌روزرسانی خطا می‌دهد | شبکه مدرسه دسترسی به GitHub ندارد |
 
-### School IT Support:
-Contact your school's IT department for:
-- Computer hardware issues
-- Network connectivity problems
-- PA system integration
-- Windows system problems
+<br>
 
-### Best Practices
-1. Keep the computer dedicated to the bell system running 24/7
-2. Create weekly schedule backups
-3. Test the system during school holidays
-4. Train multiple staff members on system operation
-5. Keep master password secure and accessible to authorized staff
+## ۱۳. کلیدهای میان‌بر
 
----
+| کلید | کار |
+|---|---|
+| `Ctrl` + `N` | رویداد جدید |
+| `Ctrl` + `U` | بارگذاری صوت |
+| `Ctrl` + `L` | کتابخانه صوتی |
+| `Ctrl` + `T` | برنامه امروز |
+| `Alt` + `۱` تا `۶` | جابه‌جایی بین بخش‌ها |
+| کلیدهای جهت‌دار | حرکت بین زبانه‌ها |
+| `Esc` | بستن پنجره |
 
-**End of User Manual**  
-*This system was custom-developed for Breman Asikuma Senior High School*  
-*© 2025 - All rights reserved*
+<br>
+
+## ۱۴. پرسش‌های پرتکرار
+
+**آیا برای اجرا اینترنت لازم است؟**
+خیر. فقط برای دریافت به‌روزرسانی اینترنت لازم است.
+
+**اگر برق قطع شود چه می‌شود؟**
+برنامه در پس‌زمینه اجرا می‌شود؛ تا وقتی ویندوز بالا باشد زنگ‌ها پخش می‌شوند.
+
+**می‌توانم برنامه را روی چند رایانه نصب کنم؟**
+بله. هر رایانه داده‌های مستقل خودش را دارد.
+
+**چطور برنامه را کامل پاک کنم؟**
+از مسیر `C:\Program Files\School Bell System` حذف کنید.
+پوشه‌ی `%APPDATA%\school-bell-system` داده‌های شماست؛ آن را پاک نکنید مگر بخواهید همه‌چیز از بین برود.
