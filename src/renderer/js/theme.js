@@ -146,7 +146,7 @@ class ThemeManager {
       this.toggleButton.title = `${LABELS[this.preference]} (active: ${resolved})`;
       this.toggleButton.setAttribute(
         'aria-label',
-        `Theme: ${this.preference}. Click to switch.`
+        `پوسته: ${LABELS[this.preference]}. برای تغییر کلیک کنید.`
       );
     }
 

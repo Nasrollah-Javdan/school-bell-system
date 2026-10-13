@@ -112,7 +112,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   handleError: (error, context = 'Unknown') => {
     return {
-      message: error.message || 'Unknown error occurred',
+      message: error.message || 'خطای ناشناخته رخ داد',
       stack: error.stack,
       context: context,
       timestamp: new Date().toISOString()

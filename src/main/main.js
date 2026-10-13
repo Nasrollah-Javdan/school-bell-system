@@ -326,7 +326,7 @@ class SchoolBellApp {
       this.tray = new Tray(trayIcon);
       
       // Configure tray
-      this.tray.setToolTip('School Bell System - Click to open');
+      this.tray.setToolTip('سامانه زنگ مدرسه — برای باز کردن کلیک کنید');
       this.updateTrayMenu();
       
       // Handle tray events
@@ -396,7 +396,7 @@ class SchoolBellApp {
     
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: '🔔 School Bell System',
+        label: '🔔 سامانه زنگ مدرسه',
         type: 'normal',
         enabled: false
       },
@@ -417,7 +417,7 @@ class SchoolBellApp {
       },
       { type: 'separator' },
       {
-        label: '🎵 Stop All Audio',
+        label: '🎵 توقف همه‌ی صداها',
         click: async () => {
           try {
             await this.audioPlayer.stop();
@@ -440,7 +440,7 @@ class SchoolBellApp {
       },
       { type: 'separator' },
       {
-        label: '⚙️ Settings',
+        label: '⚙️ تنظیمات',
         submenu: [
           {
             label: 'اجرا با شروع ویندوز',
@@ -458,7 +458,7 @@ class SchoolBellApp {
       },
       { type: 'separator' },
       {
-        label: '❌ Quit School Bell System',
+        label: '❌ خروج از سامانه زنگ مدرسه',
         click: () => this.confirmQuit()
       }
     ]);
@@ -777,7 +777,7 @@ class SchoolBellApp {
       if (this.autoLauncher) {
         await this.autoLauncher.enable();
         console.log('Auto-launch enabled');
-        this.showTrayNotification('Auto-Start Enabled', 'School Bell System will start with Windows');
+        this.showTrayNotification('Auto-Start Enabled', 'سامانه زنگ مدرسه همراه ویندوز اجرا خواهد شد');
       }
     } catch (error) {
       console.error('Failed to enable auto-launch:', error);
@@ -789,7 +789,7 @@ class SchoolBellApp {
       if (this.autoLauncher) {
         await this.autoLauncher.disable();
         console.log('Auto-launch disabled');
-        this.showTrayNotification('Auto-Start Disabled', 'School Bell System will not start with Windows');
+        this.showTrayNotification('Auto-Start Disabled', 'سامانه زنگ مدرسه همراه ویندوز اجرا نخواهد شد');
       }
     } catch (error) {
       console.error('Failed to disable auto-launch:', error);
@@ -904,7 +904,7 @@ class SchoolBellApp {
   async checkForUpdates(showDialog = false) {
     if (this.isDevelopment) {
       if (showDialog) {
-        this.showUpdateDialog('Development Mode', 'Update checking is disabled in development mode.');
+        this.showUpdateDialog('Development Mode', 'بررسی به‌روزرسانی در حالت توسعه غیرفعال است.');
       }
       return;
     }
@@ -918,7 +918,7 @@ class SchoolBellApp {
       if (showDialog && !this.updateAvailable) {
         setTimeout(() => {
           if (!this.updateAvailable) {
-            this.showUpdateDialog('No Updates', 'You are using the latest version.');
+            this.showUpdateDialog('No Updates', 'نسخه‌ی شما به‌روز است.');
           }
         }, 3000);
       }
@@ -929,7 +929,7 @@ class SchoolBellApp {
       this.sendUpdateStatus('error', `Update check failed: ${error.message}`);
       
       if (showDialog) {
-        this.showUpdateDialog('Update Check Failed', `Failed to check for updates: ${error.message}`);
+        this.showUpdateDialog('بررسی به‌روزرسانی ناموفق بود', `Failed to check for updates: ${error.message}`);
       }
     }
   }
@@ -1118,7 +1118,7 @@ class SchoolBellApp {
             accelerator: 'Ctrl+Shift+S',
             click: async () => {
               await this.audioPlayer.stop();
-              this.showAudioNotification('All audio stopped');
+              this.showAudioNotification('همه‌ی صداها متوقف شد');
             }
           },
           { type: 'separator' },
@@ -1230,12 +1230,12 @@ class SchoolBellApp {
     dialog.showMessageBox(this.mainWindow, {
       type: 'info',
       title: 'درباره سامانه زنگ مدرسه',
-      message: 'School Bell Management System',
+      message: 'سامانه زنگ مدرسه',
       detail: `Version: ${appVersion}\n` +
              `Platform: ${platform} (${arch})\n` +
              `Electron: ${electronVersion}\n` +
              `Node.js: ${nodeVersion}\n\n` +
-             `Automated school bell scheduling with audio playback.\n\n` +
+             `زمان‌بندی خودکار زنگ مدرسه همراه با پخش صدا.\n\n` +
              `© 2025 AtizaD\n` +
              `Licensed under MIT License`,
       buttons: ['تأیید', 'GitHub'],
@@ -1260,7 +1260,7 @@ class SchoolBellApp {
       type: 'question',
       title: 'خروج از سامانه زنگ مدرسه',
       message: 'آیا از خروج مطمئن هستید؟',
-      detail: 'This will stop all scheduled bell events until you restart the application.',
+      detail: 'همه‌ی زنگ‌های زمان‌بندی‌شده تا زمان راه‌اندازی مجدد برنامه متوقف می‌شوند.',
       buttons: ['انصراف', 'Minimize to Tray', 'خروج'],
       defaultId: 1,
       cancelId: 0
@@ -1270,7 +1270,7 @@ class SchoolBellApp {
       switch (result.response) {
         case 1: // Minimize to Tray
           this.hideMainWindow();
-          this.showTrayNotification('Running in Background', 'School Bell System continues in the system tray');
+          this.showTrayNotification('Running in Background', 'سامانه زنگ مدرسه در سینی سیستم باقی می‌ماند');
           break;
         case 2: // Quit
           this.confirmQuit();
@@ -1337,7 +1337,7 @@ class SchoolBellApp {
     
     // Don't quit in production - try to recover
     if (!this.isDevelopment) {
-      this.showTrayNotification('Error Detected', 'An error occurred but the app continues running');
+      this.showTrayNotification('خطایی رخ داد', 'خطایی رخ داد، اما برنامه همچنان در حال اجراست');
     }
   }
 
@@ -1353,7 +1353,7 @@ class SchoolBellApp {
     console.error(`💀 Fatal Error - ${title}: ${message}`);
     
     if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-      dialog.showErrorBox(title, `${message}\n\nThe application will now close.`);
+      dialog.showErrorBox(title, `${message}\n\nبرنامه اکنون بسته خواهد شد.`);
     }
   }
 
@@ -1383,7 +1383,7 @@ class SchoolBellApp {
       if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
 
       const result = await dialog.showSaveDialog(this.mainWindow, {
-        title: 'Export School Bell Data',
+        title: 'خروجی گرفتن از داده‌های سامانه زنگ',
         defaultPath: `school-bell-backup-${new Date().toISOString().split('T')[0]}.json`,
         filters: [
           { name: 'JSON Files', extensions: ['json'] },
@@ -1397,17 +1397,17 @@ class SchoolBellApp {
         
         dialog.showMessageBox(this.mainWindow, {
           type: 'info',
-          title: 'Export Successful',
-          message: 'Data exported successfully!',
-          detail: `Data saved to: ${result.filePath}`
+          title: 'خروجی گرفتن موفق بود',
+          message: 'خروجی کامل داده‌ها گرفته شد.',
+          detail: `داده‌ها ذخیره شد در: ${result.filePath}`
         });
 
-        this.dataManager.logActivitySafe('data_exported', `Data exported to ${result.filePath}`);
+        this.dataManager.logActivitySafe('data_exported', `داده‌ها در ${result.filePath} خروجی گرفته شد`);
       }
     } catch (error) {
       console.error('Export failed:', error);
       if (!this.mainWindow?.isDestroyed()) {
-        dialog.showErrorBox('Export Failed', `Failed to export data: ${error.message}`);
+        dialog.showErrorBox('خروجی گرفتن ناموفق بود', `خروجی گرفتن از داده‌ها ناموفق بود: ${error.message}`);
       }
     }
   }
@@ -1417,7 +1417,7 @@ class SchoolBellApp {
       if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
 
       const result = await dialog.showOpenDialog(this.mainWindow, {
-        title: 'Import School Bell Data',
+        title: 'بازیابی داده‌های سامانه زنگ',
         filters: [
           { name: 'JSON Files', extensions: ['json'] },
           { name: 'All Files', extensions: ['*'] }
@@ -1428,10 +1428,10 @@ class SchoolBellApp {
       if (!result.canceled && result.filePaths.length > 0) {
         const confirmResult = await dialog.showMessageBox(this.mainWindow, {
           type: 'warning',
-          title: 'Confirm Import',
-          message: 'This will replace all current data!',
-          detail: 'Are you sure? This action cannot be undone.',
-          buttons: ['انصراف', 'Import'],
+          title: 'تأیید بازیابی',
+          message: 'همه‌ی داده‌های فعلی جایگزین می‌شوند!',
+          detail: 'مطمئن هستید؟ این کار قابل بازگشت نیست.',
+          buttons: ['انصراف', 'بازیابی'],
           defaultId: 0
         });
 
@@ -1441,9 +1441,9 @@ class SchoolBellApp {
           
           dialog.showMessageBox(this.mainWindow, {
             type: 'info',
-            title: 'Import Successful',
-            message: 'Data imported successfully!',
-            detail: 'The application will reload.'
+            title: 'بازیابی موفق بود',
+            message: 'داده‌ها بازیابی شد.',
+            detail: 'برنامه دوباره بارگذاری می‌شود.'
           });
 
           await this.scheduler.reloadSchedules();
@@ -1451,9 +1451,9 @@ class SchoolBellApp {
         }
       }
     } catch (error) {
-      console.error('Import failed:', error);
+      console.error('بازیابی failed:', error);
       if (!this.mainWindow?.isDestroyed()) {
-        dialog.showErrorBox('Import Failed', `Failed to import data: ${error.message}`);
+        dialog.showErrorBox('بازیابی ناموفق بود', `بازیابی داده‌ها ناموفق بود: ${error.message}`);
       }
     }
   }
@@ -1574,11 +1574,11 @@ class SchoolBellApp {
             await this.dataManager.deleteAudioFile(audioId);
             deletedCount++;
             
-            this.dataManager.logActivitySafe('audio_file_deleted', `Bulk deleted: ${audioFile.name}`);
+            this.dataManager.logActivitySafe('audio_file_deleted', `${audioFile.name} حذف شد`);
           } else {
             errors.push({
               id: audioId,
-              error: 'Audio file not found in database'
+              error: 'فایل صوتی در پایگاه داده پیدا نشد'
             });
           }
         } catch (error) {
@@ -1598,7 +1598,7 @@ class SchoolBellApp {
       };
 
       this.dataManager.logActivitySafe('audio_bulk_delete', 
-        `Bulk delete completed: ${deletedCount}/${audioIds.length} files deleted`
+        `حذف گروهی کامل شد: ${deletedCount} از ${audioIds.length} فایل حذف شد`
       );
 
       return result;
@@ -1950,10 +1950,10 @@ class SchoolBellApp {
         
         const result = await dialog.showMessageBox(this.mainWindow, {
           type: 'warning',
-          title: 'Replace Existing File?',
-          message: `The file "${filename}" already exists.`,
+          title: 'جایگزینی فایل موجود؟',
+          message: `فایل «${filename}» از پیش وجود دارد.`,
           detail: 'Do you want to replace the existing file with the new one? This action cannot be undone.',
-          buttons: ['انصراف', 'Replace File'],
+          buttons: ['انصراف', 'جایگزینی فایل'],
           defaultId: 0,
           cancelId: 0,
           noLink: true
@@ -1984,8 +1984,8 @@ app.on('activate', () => {
 
 // Graceful shutdown
 process.on('exit', () => {
-  console.log('🔔 School Bell System shutting down...');
+  console.log('🔔 سامانه زنگ مدرسه shutting down...');
   schoolBellApp.cleanup();
 });
 
-console.log('🔔 School Bell System - Production Main Process Started');
+console.log('🔔 سامانه زنگ مدرسه - Production Main Process Started');

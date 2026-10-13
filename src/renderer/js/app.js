@@ -6,6 +6,52 @@ import {
   formatTimeUntilFa, countFa
 } from './fa.js';
 
+// Persian labels for log types. The raw identifiers stay in the data file -
+// only the display is translated.
+const LOG_TYPE_LABELS = {
+  app_shutdown: 'بستن برنامه',
+  audio_bulk_delete: 'حذف گروهی صوت',
+  audio_file_added: 'افزودن فایل صوتی',
+  audio_file_deleted: 'حذف فایل صوتی',
+  audio_file_replaced: 'جایگزینی فایل صوتی',
+  audio_file_updated: 'ویرایش فایل صوتی',
+  audio_file_uploaded: 'بارگذاری فایل صوتی',
+  audio_files_migrated: 'انتقال فایل‌های صوتی',
+  audio_migration: 'انتقال فایل‌های صوتی',
+  data_exported: 'خروجی داده‌ها',
+  data_imported: 'بازیابی داده‌ها',
+  data_recovered: 'بازیابی داده‌ها',
+  default_audio_installed: 'نصب زنگ‌های پیش‌فرض',
+  default_schedule_applied: 'اعمال برنامه پیش‌فرض',
+  emergency_stop: 'توقف اضطراری',
+  logs_cleared: 'پاک کردن گزارش‌ها',
+  schedule_audio_completed: 'پایان پخش زنگ',
+  schedule_event_added: 'افزودن رویداد',
+  schedule_event_deleted: 'حذف رویداد',
+  schedule_event_updated: 'ویرایش رویداد',
+  schedule_executed: 'اجرای زنگ',
+  schedule_execution_error: 'خطا در اجرای زنگ',
+  schedule_execution_failed: 'اجرای زنگ ناموفق',
+  schedule_html5_fallback: 'پخش جایگزین',
+  schedule_no_audio: 'رویداد بدون صوت',
+  schedule_test_failed: 'آزمایش ناموفق',
+  schedule_tested: 'آزمایش رویداد',
+  scheduler_reloaded: 'بارگذاری دوباره زمان‌بندی',
+  scheduler_started: 'شروع زمان‌بندی',
+  scheduler_stopped: 'توقف زمان‌بندی',
+  settings_updated: 'به‌روزرسانی تنظیمات',
+  template_added: 'افزودن الگو',
+  template_deleted: 'حذف الگو',
+  template_updated: 'ویرایش الگو',
+  uncaught_exception: 'خطای مدیریت‌نشده',
+  unhandled_rejection: 'خطای مدیریت‌نشده'
+};
+
+/** Human-readable label for a log type. */
+function logTypeLabel(type) {
+  return LOG_TYPE_LABELS[type] || String(type).replace(/_/g, ' ');
+}
+
 /**
  * School Bell App - core application shell.
  *
@@ -660,7 +706,7 @@ export class SchoolBellApp {
       scheduleDay.innerHTML = `
         <div class="empty-state">
           <span class="empty-icon">📅</span>
-          <p>No events scheduled for ${this.escapeHtml(this.capitalizeFirst(this.currentDay || ''))}</p>
+          <p>برای ${this.escapeHtml(this.capitalizeFirst(this.currentDay || ''))} هیچ رویدادی تعریف نشده است</p>
           <button class="btn btn-outline" onclick="app.showAddEventModal()">افزودن نخستین رویداد</button>
         </div>
       `;
@@ -766,7 +812,7 @@ export class SchoolBellApp {
 const logsHTML = [...logs].reverse().map(log => `
       <div class="log-item">
         <div class="log-content">
-          <div class="log-type" data-type="${this.escapeHtml(log.type)}">${this.escapeHtml(log.type.replace(/_/g, ' '))}</div>
+          <div class="log-type" data-type="${this.escapeHtml(log.type)}">${this.escapeHtml(logTypeLabel(log.type))}</div>
           <div class="log-message">${this.escapeHtml(log.message)}</div>
           ${log.details ? `<div class="log-details">${this.escapeHtml(log.details)}</div>` : ''}
         </div>
@@ -849,7 +895,7 @@ const logsHTML = [...logs].reverse().map(log => `
   async testAudioFile(filename) {
     try {
       console.log('App.js: Testing audio file:', filename);
-      this.showNotification(`Playing: ${filename}`, 'info');
+      this.showNotification(`در حال پخش: ${filename}`, 'info');
       this.setStatus('playing', 'در حال پخش');
       
       if (this.setAudioControlsState) {

@@ -186,7 +186,7 @@ class Scheduler {
   async testEvent(day, event) {
     try {
       if (!event.audioSequence || event.audioSequence.length === 0) {
-        throw new Error('Event has no audio sequence to test');
+        throw new Error('رویداد دنباله‌ی صوتی برای آزمایش ندارد');
       }
 
       await this.audioPlayer.validateAudioSequence(event.audioSequence);
@@ -196,7 +196,7 @@ class Scheduler {
         `Tested event "${event.name}" manually`
       );
       
-      return { success: true, message: `Event "${event.name}" tested successfully` };
+      return { success: true, message: `رویداد «${event.name}» با موفقیت آزمایش شد` };
       
     } catch (error) {
       this.dataManager.logActivitySafe('schedule_test_failed', 
@@ -222,7 +222,7 @@ class Scheduler {
     this.isRunning = true;
     
     this.dataManager.logActivitySafe('scheduler_started', 
-      `Scheduler started with ${this.jobs.size} jobs`
+      `زمان‌بندی با ${this.jobs.size} فعالیت آغاز شد`
     );
   }
 
@@ -442,7 +442,7 @@ class Scheduler {
       
       this.dataManager.logActivitySafe('emergency_stop', 'توقف اضطراری فعال شد');
       
-      return { success: true, message: 'Emergency stop completed' };
+      return { success: true, message: 'توقف اضطراری انجام شد' };
       
     } catch (error) {
       throw error;

@@ -173,7 +173,7 @@ export function extendAppWithScheduleMethods(app) {
 
     } catch (error) {
       console.error('Failed to show event modal:', error);
-      this.showNotification('Failed to load event form', 'error');
+      this.showNotification('باز کردن فرم رویداد ناموفق بود', 'error');
     }
   };
 
@@ -253,12 +253,12 @@ export function extendAppWithScheduleMethods(app) {
           <span class="sequence-item__repeat">Plays ${item.repeat}×</span>
         </div>
         <div class="sequence-item__controls">
-          <button type="button" onclick="app.moveAudio(${index}, -1)" title="انتقال به بالا" aria-label="Move ${this.escapeHtml(item.audioFile)} up">↑</button>
-          <button type="button" onclick="app.moveAudio(${index}, 1)" title="انتقال به پایین" aria-label="Move ${this.escapeHtml(item.audioFile)} down">↓</button>
+          <button type="button" onclick="app.moveAudio(${index}, -1)" title="انتقال به بالا" aria-label="انتقال ${this.escapeHtml(item.audioFile)} به بالا">↑</button>
+          <button type="button" onclick="app.moveAudio(${index}, 1)" title="انتقال به پایین" aria-label="انتقال ${this.escapeHtml(item.audioFile)} به پایین">↓</button>
           <button type="button" onclick="app.changeRepeat(${index}, -1)" title="یک بار کمتر پخش شود" aria-label="کاهش تعداد تکرار">−</button>
           <button type="button" onclick="app.changeRepeat(${index}, 1)" title="یک بار بیشتر پخش شود" aria-label="افزایش تعداد تکرار">+</button>
-          <button type="button" onclick="app.previewAudio('${item.audioFile}')" title="پیش‌نمایش" aria-label="Preview ${this.escapeHtml(item.audioFile)}">▶</button>
-          <button type="button" data-action="remove" onclick="app.removeAudio(${index})" title="حذف" aria-label="Remove ${this.escapeHtml(item.audioFile)}">×</button>
+          <button type="button" onclick="app.previewAudio('${item.audioFile}')" title="پیش‌نمایش" aria-label="پیش‌نمایش ${this.escapeHtml(item.audioFile)}">▶</button>
+          <button type="button" data-action="remove" onclick="app.removeAudio(${index})" title="حذف" aria-label="حذف ${this.escapeHtml(item.audioFile)}">×</button>
         </div>
       </div>
     `).join('');
@@ -430,7 +430,7 @@ export function extendAppWithScheduleMethods(app) {
         }
 
         eventData = event;
-        context = `Testing event: ${event.name}`;
+        context = `در حال آزمایش رویداد: ${event.name}`;
       } else {
         // Testing event from form (during creation/editing)
         const data = this.getEventData();
@@ -457,7 +457,7 @@ export function extendAppWithScheduleMethods(app) {
     } catch (error) {
       console.error('آزمون ناموفق بود:', error);
       this.setStatus('error', 'آزمون ناموفق');
-      this.showNotification(`Test failed: ${error.message}`, 'error');
+      this.showNotification(`آزمایش ناموفق بود: ${error.message}`, 'error');
     }
   };
 
@@ -490,7 +490,7 @@ export function extendAppWithScheduleMethods(app) {
     } catch (error) {
       console.error('ذخیره ناموفق بود:', error);
       this.showLoading(false);
-      this.showNotification(`Save failed: ${error.message}`, 'error');
+      this.showNotification(`ذخیره ناموفق بود: ${error.message}`, 'error');
     }
   };
 
@@ -536,7 +536,7 @@ export function extendAppWithScheduleMethods(app) {
       
     } catch (error) {
       console.error('Edit failed:', error);
-      this.showNotification('Failed to load event', 'error');
+      this.showNotification('باز کردن رویداد ناموفق بود', 'error');
     }
   };
 
@@ -566,7 +566,7 @@ export function extendAppWithScheduleMethods(app) {
       
       const content = `
         <div class="template-selector">
-          <p><strong>Apply template to ${this.currentDay}:</strong></p>
+          <p><strong>اعمال الگو روی ${this.currentDay}:</strong></p>
           <div class="warning">⚠️ با این کار همه رویدادهای موجود جایگزین می‌شوند</div>
           <div class="templates-list">
             ${templatesList}

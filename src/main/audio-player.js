@@ -75,7 +75,7 @@ class AudioPlayer {
               this.playAudioFallback(filename).then(resolve).catch(reject);
               return;
             }
-            reject(new Error(`Audio playback failed: ${filename}`));
+            reject(new Error(`پخش صوت ناموفق بود: ${filename}`));
           }
         });
         
@@ -126,7 +126,7 @@ class AudioPlayer {
           } else if (code === 0) {
             resolve({ success: true, completed: true, filename });
           } else {
-            reject(new Error(`Fallback audio playback failed: ${filename}`));
+            reject(new Error(`پخش صوت جایگزین ناموفق بود: ${filename}`));
           }
         });
         
@@ -242,7 +242,7 @@ class AudioPlayer {
   async playEventSequence(event) {
     try {
       if (!event.audioSequence || event.audioSequence.length === 0) {
-        throw new Error('No audio sequence defined');
+        throw new Error('دنباله‌ی صوتی تعریف نشده است');
       }
       
       await this.stopAllAudio();
@@ -329,9 +329,9 @@ class AudioPlayer {
         return new Promise((resolve, reject) => {
           testProcess.on('close', (code) => {
             if (code === 0) {
-              resolve({ success: true, message: 'System beep successful' });
+              resolve({ success: true, message: 'بوق آزمایشی سیستم پخش شد' });
             } else {
-              reject(new Error('System beep failed'));
+              reject(new Error('بوق آزمایشی سیستم پخش نشد'));
             }
           });
           
@@ -340,7 +340,7 @@ class AudioPlayer {
           });
         });
       } else {
-        return { success: true, message: 'Platform test not available' };
+        return { success: true, message: 'آزمایش این سیستم‌عامل در دسترس نیست' };
       }
       
     } catch (error) {
@@ -350,7 +350,7 @@ class AudioPlayer {
 
   async validateAudioSequence(audioSequence) {
     if (!Array.isArray(audioSequence) || audioSequence.length === 0) {
-      throw new Error('Audio sequence must be a non-empty array');
+      throw new Error('دنباله‌ی صوتی باید آرایه‌ای ناتهی باشد');
     }
     
     const availableFiles = await this.getAvailableAudioFiles();

@@ -15,7 +15,7 @@ export function extendAppWithTemplateMethods(app) {
       this.renderTemplates();
     } catch (error) {
       console.error('Templates update failed:', error);
-      this.showNotification('Failed to update templates', 'error');
+      this.showNotification('به‌روزرسانی الگوها ناموفق بود', 'error');
     }
   };
 
@@ -33,7 +33,7 @@ export function extendAppWithTemplateMethods(app) {
         <div class="empty-state">
           <span class="empty-icon">📋</span>
           <p>هنوز الگویی ساخته نشده است</p>
-          <p>Templates let you save common schedule patterns and reuse them across different days</p>
+          <p>الگوها کمک می‌کنند برنامه‌های تکراری را ذخیره کنید و روی روزهای مختلف دوباره به کار ببرید</p>
           <div class="empty-actions">
             <button class="btn btn-primary" onclick="app.showCreateTemplateModal()">
               ➕ Create Template
@@ -58,7 +58,7 @@ export function extendAppWithTemplateMethods(app) {
               <div class="template-name">${this.escapeHtml(template.name)}</div>
               <div class="template-description">${this.escapeHtml(template.description || '')}</div>
             </div>
-            <div class="template-badge">${eventCount} events</div>
+            <div class="template-badge">${eventCount} رویداد</div>
           </div>
           
           <div class="template-body">
@@ -88,7 +88,7 @@ export function extendAppWithTemplateMethods(app) {
                     </div>
                   `).join('')}
                   ${eventCount > 3 ? `
-                    <div class="preview-more">+${eventCount - 3} more events</div>
+                    <div class="preview-more">و ${eventCount - 3} رویداد دیگر</div>
                   ` : ''}
                 </div>
               </div>
@@ -103,27 +103,27 @@ export function extendAppWithTemplateMethods(app) {
             <button class="btn btn-sm btn-primary" 
                     onclick="app.showApplyTemplateModal('${template.id}')" 
                     title="اعمال در برنامه">
-              📋 Apply
+              📋 اعمال
             </button>
             <button class="btn btn-sm btn-outline" 
                     onclick="app.previewTemplate('${template.id}')" 
                     title="پیش‌نمایش الگو">
-              👁️ Preview
+              👁️ پیش‌نمایش
             </button>
             <button class="btn btn-sm btn-secondary" 
                     onclick="app.duplicateTemplate('${template.id}')" 
                     title="تکثیر الگو">
-              📄 Duplicate
+              📄 رونوشت
             </button>
             <button class="btn btn-sm btn-warning" 
                     onclick="app.exportTemplate('${template.id}')" 
                     title="خروجی گرفتن از الگو">
-              💾 Export
+              💾 خروجی
             </button>
             <button class="btn btn-sm btn-danger" 
                     onclick="app.deleteTemplate('${template.id}')" 
                     title="حذف الگو">
-              🗑️ Delete
+              🗑️ حذف
             </button>
           </div>
         </div>
@@ -161,8 +161,8 @@ export function extendAppWithTemplateMethods(app) {
           </div>
           
           <div class="form-group">
-            <label for="templateتوضیحات">توضیحات</label>
-            <textarea id="templateتوضیحات" rows="3" placeholder="توضیح دهید این الگو چه زمانی و چگونه استفاده می‌شود…"></textarea>
+            <label for="template-description-input">توضیحات</label>
+            <textarea id="template-description-input" rows="3" placeholder="توضیح دهید این الگو چه زمانی و چگونه استفاده می‌شود…"></textarea>
             <div class="form-help">توضیح اختیاری برای شناسایی بهتر الگو</div>
           </div>
           
@@ -244,7 +244,7 @@ export function extendAppWithTemplateMethods(app) {
   app.createTemplate = async function() {
     try {
       const name = document.getElementById('templateName').value.trim();
-      const description = document.getElementById('templateتوضیحات').value.trim();
+      const description = document.getElementById('template-description-input').value.trim();
       const sourceDay = document.getElementById('sourceDay').value;
 
       if (!name) {
@@ -293,11 +293,11 @@ export function extendAppWithTemplateMethods(app) {
       await this.loadData();
       this.updateTemplates();
       
-      this.showNotification(`Template "${name}" created successfully!`, 'success');
+      this.showNotification(`الگوی «${name}» ساخته شد`, 'success');
       
     } catch (error) {
       console.error('Failed to create template:', error);
-      this.showNotification(`Failed to create template: ${error.message}`, 'error');
+      this.showNotification(`ساخت الگو ناموفق بود: ${error.message}`, 'error');
     }
   };
 
@@ -400,7 +400,7 @@ export function extendAppWithTemplateMethods(app) {
       
     } catch (error) {
       console.error('Failed to show apply template modal:', error);
-      this.showNotification('Failed to load apply template form', 'error');
+      this.showNotification('باز کردن فرم اعمال الگو ناموفق بود', 'error');
     }
   };
 
@@ -548,7 +548,7 @@ export function extendAppWithTemplateMethods(app) {
           successCount++;
         } catch (error) {
           console.error(`Failed to apply template to ${day}:`, error);
-          this.showNotification(`Failed to apply template to ${day}: ${error.message}`, 'error');
+          this.showNotification(`اعمال الگو روی ${day} ناموفق بود: ${error.message}`, 'error');
         }
       }
 
@@ -569,7 +569,7 @@ export function extendAppWithTemplateMethods(app) {
     } catch (error) {
       console.error('Failed to apply template:', error);
       this.showLoading(false);
-      this.showNotification(`Failed to apply template: ${error.message}`, 'error');
+      this.showNotification(`اعمال الگو ناموفق بود: ${error.message}`, 'error');
     }
   };
 
@@ -677,11 +677,11 @@ export function extendAppWithTemplateMethods(app) {
       await this.loadData();
       this.updateTemplates();
       
-      this.showNotification(`Template duplicated as "${duplicateData.name}"`, 'success');
+      this.showNotification(`الگو با نام «${duplicateData.name}» رونوشت شد`, 'success');
       
     } catch (error) {
       console.error('Failed to duplicate template:', error);
-      this.showNotification('Failed to duplicate template', 'error');
+      this.showNotification('رونوشت‌برداری الگو ناموفق بود', 'error');
     }
   };
 
@@ -716,7 +716,7 @@ export function extendAppWithTemplateMethods(app) {
       
       URL.revokeObjectURL(link.href);
       
-      this.showNotification(`Template "${template.name}" exported successfully`, 'success');
+      this.showNotification(`الگوی «${template.name}» خروجی گرفته شد`, 'success');
       
     } catch (error) {
       console.error('Export failed:', error);
@@ -756,7 +756,7 @@ export function extendAppWithTemplateMethods(app) {
 
     const buttons = [
       { text: 'انصراف', class: 'btn btn-secondary', onclick: () => this.closeModal() },
-      { text: '📁 Browse Files', class: 'btn btn-primary', onclick: () => document.getElementById('templateFileInput').click() }
+      { text: '📁 انتخاب فایل', class: 'btn btn-primary', onclick: () => document.getElementById('templateFileInput').click() }
     ];
 
     this.showModal('بازیابی الگو', modalContent, buttons);
@@ -831,11 +831,11 @@ export function extendAppWithTemplateMethods(app) {
       await this.loadData();
       this.updateTemplates();
       
-      this.showNotification(`Template "${templateData.name}" imported successfully!`, 'success');
+      this.showNotification(`الگوی «${templateData.name}» بازیابی شد`, 'success');
       
     } catch (error) {
       console.error('Import failed:', error);
-      this.showNotification(`Failed to import template: ${error.message}`, 'error');
+      this.showNotification(`بازیابی الگو ناموفق بود: ${error.message}`, 'error');
     }
   };
 
@@ -861,11 +861,11 @@ export function extendAppWithTemplateMethods(app) {
       await this.loadData();
       this.updateTemplates();
       
-      this.showNotification(`Template "${template.name}" deleted successfully`, 'success');
+      this.showNotification(`الگوی «${template.name}» حذف شد`, 'success');
       
     } catch (error) {
       console.error('Failed to delete template:', error);
-      this.showNotification(`Failed to delete template: ${error.message}`, 'error');
+      this.showNotification(`حذف الگو ناموفق بود: ${error.message}`, 'error');
     }
   };
 

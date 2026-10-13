@@ -360,7 +360,7 @@ export function extendAppWithSettingsMethods(app) {
         
       } catch (error) {
         console.error('Failed to save volume setting after retries:', error);
-        this.showNotification('Failed to save volume setting', 'error');
+        this.showNotification('ذخیره‌ی میزان صدا ناموفق بود', 'error');
         
         // Revert display to last known good value
         try {
@@ -414,7 +414,7 @@ export function extendAppWithSettingsMethods(app) {
       
     } catch (error) {
       console.error('Failed to update auto start:', error);
-      this.showNotification('Failed to update auto start setting', 'error');
+      this.showNotification('به‌روزرسانی اجرای خودکار ناموفق بود', 'error');
     }
   };
 
@@ -472,7 +472,7 @@ export function extendAppWithSettingsMethods(app) {
 
     try {
       await window.electronAPI.updateSettings({ audioRepeatInterval: interval });
-      this.showNotification(`Audio repeat interval set to ${interval} seconds`, 'success');
+      this.showNotification(`فاصله تکرار روی ${toPersianDigits(interval)} ثانیه تنظیم شد`, 'success');
       console.log('Audio repeat interval updated:', interval);
       
     } catch (error) {
@@ -485,7 +485,7 @@ export function extendAppWithSettingsMethods(app) {
    * Handle restart application button
    */
   app.handleRestartApp = async function() {
-    const confirmed = confirm('This will restart the application and stop all scheduled events. Are you sure?');
+    const confirmed = confirm('برنامه راه‌اندازی مجدد می‌شود و همه‌ی زنگ‌های زمان‌بندی‌شده متوقف می‌شوند. مطمئن هستید؟');
     if (!confirmed) return;
     
     try {
@@ -494,7 +494,7 @@ export function extendAppWithSettingsMethods(app) {
       
     } catch (error) {
       console.error('Failed to restart application:', error);
-      this.showNotification('Failed to restart application', 'error');
+      this.showNotification('راه‌اندازی مجدد برنامه ناموفق بود', 'error');
     }
   };
 
@@ -561,7 +561,7 @@ export function extendAppWithSettingsMethods(app) {
    */
   app.handleImportData = async function() {
     try {
-      const confirmed = confirm('This will replace all current data! Are you sure you want to continue?');
+      const confirmed = confirm('همه‌ی داده‌های فعلی جایگزین می‌شوند! مطمئن هستید که می‌خواهید ادامه دهید؟');
       if (!confirmed) return;
       
       const result = await window.electronAPI.showOpenDialog({

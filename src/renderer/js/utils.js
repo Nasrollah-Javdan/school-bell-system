@@ -83,17 +83,17 @@ export const getFileTypeDisplay = (filename) => {
   if (!filename) return 'Unknown';
   const ext = filename.split('.').pop().toUpperCase();
   const typeMap = {
-    'MP3': 'MP3 Audio',
-    'WAV': 'WAV Audio',
-    'M4A': 'M4A Audio',
-    'OGG': 'OGG Audio',
-    'AAC': 'AAC Audio',
-    'FLAC': 'FLAC Audio',
-    'JSON': 'JSON Data',
-    'TXT': 'Text File',
+    'MP3': 'صدای MP3',
+    'WAV': 'صدای WAV',
+    'M4A': 'صدای M4A',
+    'OGG': 'صدای OGG',
+    'AAC': 'صدای AAC',
+    'FLAC': 'صدای FLAC',
+    'JSON': 'داده‌ی JSON',
+    'TXT': 'فایل متنی',
     'PDF': 'PDF Document'
   };
-  return typeMap[ext] || `${ext} File`;
+  return typeMap[ext] || `فایل ${ext}`;
 };
 
 /**
@@ -183,7 +183,7 @@ export const formatTimeUntil = (seconds) => {
 export const formatUploadDate = (dateString) => {
   if (!dateString) return 'Unknown';
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'Invalid Date';
+  if (isNaN(date.getTime())) return 'تاریخ نامعتبر';
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 };
 
@@ -196,7 +196,7 @@ export const formatUploadDate = (dateString) => {
 export const formatDate = (dateString, includeTime = false) => {
   if (!dateString) return 'Unknown';
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'Invalid Date';
+  if (isNaN(date.getTime())) return 'تاریخ نامعتبر';
   
   if (includeTime) {
     return date.toLocaleString();
@@ -525,29 +525,29 @@ export const createError = (message, code = 'GENERIC_ERROR', details = null) => 
  * @returns {string} - User-friendly error message
  */
 export const formatErrorForUser = (error, context = 'operation') => {
-  if (!error) return `An unknown error occurred during ${context}`;
+  if (!error) return `در حین ${context} خطای ناشناخته‌ای رخ داد`;
   
   const message = error.message || error.toString();
   
   // Common error patterns and user-friendly messages
   if (message.includes('ENOENT') || message.includes('not found')) {
-    return 'File not found. Please check if the file exists.';
+    return 'فایل پیدا نشد. بررسی کنید که فایل وجود دارد.';
   }
   
   if (message.includes('EACCES') || message.includes('permission')) {
-    return 'Permission denied. Please check file permissions.';
+    return 'دسترسی مجاز نیست. سطح دسترسی فایل را بررسی کنید.';
   }
   
   if (message.includes('EMFILE') || message.includes('too many files')) {
-    return 'Too many files open. Please close some applications and try again.';
+    return 'تعداد فایل‌های باز بیش از حد است. چند برنامه را ببندید و دوباره تلاش کنید.';
   }
   
   if (message.includes('network') || message.includes('ENOTFOUND')) {
-    return 'Network error. Please check your internet connection.';
+    return 'خطای شبکه. اتصال اینترنت خود را بررسی کنید.';
   }
   
   // Return original message if no pattern matches
-  return `${context} failed: ${message}`;
+  return `${context} ناموفق بود: ${message}`;
 };
 
 // ============================================================================

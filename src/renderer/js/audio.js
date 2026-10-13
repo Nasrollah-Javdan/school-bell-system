@@ -72,22 +72,22 @@ export function extendAppWithAudioMethods(app) {
                       onclick="app.testAudio('${audioFile.filename}')" 
                       title="پخش این فایل صوتی"
                       ${!isAvailable ? 'disabled' : ''}>
-                ▶️ Play
+                ▶️ پخش
               </button>
               <button class="btn btn-sm btn-secondary stop-btn" 
                       onclick="app.stopAudio()" 
                       title="توقف همه صداها">
-                ⏹️ Stop
+                ⏹️ توقف
               </button>
               <button class="btn btn-sm btn-info" 
                       onclick="app.showAudioDetails('${audioFile.id}')" 
                       title="مشاهده جزئیات">
-                ℹ️ Details
+                ℹ️ جزئیات
               </button>
               <button class="btn btn-sm btn-danger" 
                       onclick="app.deleteAudio('${audioFile.id}', '${this.escapeHtml(audioFile.name)}')" 
                       title="حذف این فایل صوتی">
-                🗑️ Delete
+                🗑️ حذف
               </button>
             </div>
           </div>
@@ -131,13 +131,13 @@ export function extendAppWithAudioMethods(app) {
           </div>
           <div class="audio-file__controls">
             <button class="btn btn-sm btn-success play-btn" onclick="app.testAudio('${audioFile.filename}')">
-              ▶️ Play
+              ▶️ پخش
             </button>
             <button class="btn btn-sm btn-secondary stop-btn" onclick="app.stopAudio()">
-              ⏹️ Stop
+              ⏹️ توقف
             </button>
             <button class="btn btn-sm btn-danger" onclick="app.deleteAudio('${audioFile.id}', '${this.escapeHtml(audioFile.name)}')">
-              🗑️ Delete
+              🗑️ حذف
             </button>
           </div>
         </div>
@@ -163,7 +163,7 @@ export function extendAppWithAudioMethods(app) {
       }
 
       this.setStatus('playing', 'در حال پخش');
-      this.showNotification(`Playing: ${filename}`, 'info');
+      this.showNotification(`در حال پخش: ${filename}`, 'info');
       
       // Update UI to show which audio is playing
       this.updateAudioPlayingState(filename, true);
@@ -194,20 +194,20 @@ export function extendAppWithAudioMethods(app) {
       this.updateAudioPlayingState(filename, false);
       
       if (result && result.success) {
-        this.showNotification(`Audio completed: ${filename}`, 'success');
+        this.showNotification(`پخش کامل شد: ${filename}`, 'success');
       }
       
     } catch (error) {
       this.setStatus('error', 'خطای صوتی');
       this.updateAudioPlayingState(filename, false);
       
-      let errorMessage = `Failed to play: ${filename}`;
+      let errorMessage = `پخش ناموفق بود: ${filename}`;
       if (error.message.includes('not found') || error.message.includes('ENOENT')) {
-        errorMessage += ' - File not found';
+        errorMessage += ' - فایل پیدا نشد';
       } else if (error.message.includes('permission') || error.message.includes('EACCES')) {
-        errorMessage += ' - Permission denied';
+        errorMessage += ' - دسترسی مجاز نیست';
       } else if (error.message.includes('format')) {
-        errorMessage += ' - Unsupported format';
+        errorMessage += ' - قالب پشتیبانی نمی‌شود';
       }
       
       this.showNotification(errorMessage, 'error');
@@ -293,7 +293,7 @@ export function extendAppWithAudioMethods(app) {
         // This file is not playing
         audioFile.classList.remove('playing');
         if (playBtn) {
-          playBtn.textContent = '▶️ Play';
+          playBtn.textContent = '▶️ پخش';
           playBtn.disabled = false;
           playBtn.classList.remove('playing');
         }
@@ -364,10 +364,10 @@ export function extendAppWithAudioMethods(app) {
           <h4>🎵 پخش و کنترل</h4>
           <div class="detail-controls">
             <button class="btn btn-success" onclick="app.testAudio('${audioFile.filename}')">
-              ▶️ Play Audio
+              ▶️ پخش Audio
             </button>
             <button class="btn btn-secondary" onclick="app.stopAudio()">
-              ⏹️ Stop Audio
+              ⏹️ توقف Audio
             </button>
           </div>
         </div>
@@ -375,7 +375,7 @@ export function extendAppWithAudioMethods(app) {
         <div class="detail-section">
           <h4>📊 اطلاعات استفاده</h4>
           <div class="usage-info">
-            <p>This audio file can be used in schedule events. Once added to an event's audio sequence, it will play automatically when the event triggers.</p>
+            <p>این فایل صوتی در رویدادهای برنامه قابل استفاده است. به‌محض افزودن آن به دنباله‌ی صوتی یک رویداد، هنگام رسیدن ساعت آن رویداد به‌طور خودکار پخش می‌شود.</p>
             <p><strong>تعداد استفاده در رویدادها:</strong> ${this.getAudioUsageCount(audioFile.filename)} event(s)</p>
           </div>
         </div>
@@ -398,7 +398,7 @@ export function extendAppWithAudioMethods(app) {
       }
     ];
 
-    this.showModal(`Audio Details - ${audioFile.name}`, modalContent, buttons);
+    this.showModal(`جزئیات صوت — ${audioFile.name}`, modalContent, buttons);
   };
 
   app.getAudioUsageCount = function(filename) {
@@ -483,7 +483,7 @@ export function extendAppWithAudioMethods(app) {
         onclick: () => this.closeModal()
       },
       {
-        text: '📁 Browse Files',
+        text: '📁 انتخاب فایل',
         class: 'btn btn-primary',
         onclick: () => document.getElementById('audioFileInput').click()
       }
@@ -556,7 +556,7 @@ export function extendAppWithAudioMethods(app) {
       ).join('\n');
       
       this.showNotification(
-        `${invalidFiles.length} file(s) skipped:\n${invalidList}`, 
+        `${invalidFiles.length} فایل نادیده گرفته شد:\n${invalidList}`, 
         'warning'
       );
     }
@@ -566,7 +566,7 @@ export function extendAppWithAudioMethods(app) {
       return;
     }
 
-    this.showNotification(`Uploading ${validFiles.length} file(s)...`, 'info');
+    this.showNotification(`در حال بارگذاری ${validFiles.length} فایل…`, 'info');
     this.closeModal();
 
     let successCount = 0;
@@ -577,7 +577,7 @@ export function extendAppWithAudioMethods(app) {
       
       try {
         this.showNotification(
-          `Uploading ${i + 1}/${validFiles.length}: ${file.name}`, 
+          `در حال بارگذاری ${i + 1} از ${validFiles.length}: ${file.name}`, 
           'info'
         );
 
@@ -594,7 +594,7 @@ export function extendAppWithAudioMethods(app) {
         
       } catch (error) {
         errorCount++;
-        this.showNotification(`Failed to upload ${file.name}: ${error.message}`, 'error');
+        this.showNotification(`بارگذاری ${file.name} ناموفق بود: ${error.message}`, 'error');
       }
     }
 
@@ -602,8 +602,8 @@ export function extendAppWithAudioMethods(app) {
       await this.loadData();
       this.updateAudioLibrary();
       this.showNotification(
-        `Upload completed! ${successCount} file(s) uploaded successfully` +
-        (errorCount > 0 ? `, ${errorCount} failed` : ''),
+        `بارگذاری کامل شد؛ ${successCount} فایل با موفقیت بارگذاری شد` +
+        (errorCount > 0 ? `، ${errorCount} ناموفق` : ''),
         successCount > errorCount ? 'success' : 'warning'
       );
     } else {
@@ -635,17 +635,17 @@ export function extendAppWithAudioMethods(app) {
       await this.loadData();
       this.updateAudioLibrary();
       
-      this.showNotification(`Deleted: ${audioName}`, 'success');
+      this.showNotification(`حذف شد: ${audioName}`, 'success');
       
       if (usageCount > 0) {
         this.showNotification(
-          `Warning: ${usageCount} event(s) may now fail to play audio`, 
+          `هشدار: ${usageCount} رویداد ممکن است دیگر صدا پخش نکنند`, 
           'warning'
         );
       }
       
     } catch (error) {
-      this.showNotification(`Failed to delete: ${error.message}`, 'error');
+      this.showNotification(`حذف ناموفق بود: ${error.message}`, 'error');
     }
   };
 
@@ -696,7 +696,7 @@ export function extendAppWithAudioMethods(app) {
     // Use the `hidden` attribute rather than inline styles so the toolbar
     // cannot end up stuck on screen or stuck hidden.
     bulkActions.hidden = !hasSelection;
-    selectedCount.textContent = `${checkedBoxes.length} selected`;
+    selectedCount.textContent = `${checkedBoxes.length} فایل انتخاب شده`;
 
     const deleteBtn = document.getElementById('bulkDeleteBtn');
     if (deleteBtn) deleteBtn.disabled = !hasSelection;
@@ -737,7 +737,7 @@ export function extendAppWithAudioMethods(app) {
     }).join(', ');
 
     const confirmed = confirm(
-      `Are you sure you want to delete ${checkedBoxes.length} audio file${checkedBoxes.length > 1 ? 's' : ''}?\n\n${selectedFiles}\n\nThis action cannot be undone.`
+      `آیا از حذف ${checkedBoxes.length} فایل صوتی مطمئن هستید؟\n\n${selectedFiles}\n\nThis action cannot be undone.`
     );
 
     if (confirmed) {
@@ -753,7 +753,7 @@ export function extendAppWithAudioMethods(app) {
           );
           
           if (result.errors && result.errors.length > 0) {
-            this.showNotification(`Failed to delete ${result.errors.length} files`, 'warning');
+            this.showNotification(`حذف ${result.errors.length} فایل ناموفق بود`, 'warning');
           }
 
           await this.loadData();
@@ -764,7 +764,7 @@ export function extendAppWithAudioMethods(app) {
         }
       } catch (error) {
         console.error('Bulk delete failed:', error);
-        this.showNotification(`Failed to delete audio files: ${error.message}`, 'error');
+        this.showNotification(`حذف فایل‌های صوتی ناموفق بود: ${error.message}`, 'error');
       }
     }
   };
