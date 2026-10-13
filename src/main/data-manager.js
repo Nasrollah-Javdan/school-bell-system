@@ -26,7 +26,8 @@ class DataManager {
         audioRepeatInterval: 3,
         logLevel: 'info',
         autoStart: true,
-        maxLogEntries: 1000
+        maxLogEntries: 1000,
+        theme: 'system'
       },
       logs: [],
       metadata: {

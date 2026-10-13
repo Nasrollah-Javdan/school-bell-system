@@ -4,17 +4,7 @@
  */
 
 // Extend the main app with template methods
-if (typeof window !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      if (window.app) {
-        extendAppWithTemplateMethods(window.app);
-      }
-    }, 100);
-  });
-}
-
-function extendAppWithTemplateMethods(app) {
+export function extendAppWithTemplateMethods(app) {
 
   /**
    * Update templates view
@@ -59,7 +49,7 @@ function extendAppWithTemplateMethods(app) {
 
     const templatesHTML = templates.map(template => {
       const eventCount = template.events?.length || 0;
-      const lastUsed = template.lastUsed ? new Date(template.lastUsed).toLocaleDateString() : 'Never';
+      const lastUsed = template.lastUsed ? new Date(template.lastUsed).toLocaleDateString() : 'هرگز';
       
       return `
         <div class="template-card" data-id="${template.id}">
@@ -112,27 +102,27 @@ function extendAppWithTemplateMethods(app) {
           <div class="template-actions">
             <button class="btn btn-sm btn-primary" 
                     onclick="app.showApplyTemplateModal('${template.id}')" 
-                    title="Apply to schedule">
+                    title="اعمال در برنامه">
               📋 Apply
             </button>
             <button class="btn btn-sm btn-outline" 
                     onclick="app.previewTemplate('${template.id}')" 
-                    title="Preview template">
+                    title="پیش‌نمایش الگو">
               👁️ Preview
             </button>
             <button class="btn btn-sm btn-secondary" 
                     onclick="app.duplicateTemplate('${template.id}')" 
-                    title="Duplicate template">
+                    title="تکثیر الگو">
               📄 Duplicate
             </button>
             <button class="btn btn-sm btn-warning" 
                     onclick="app.exportTemplate('${template.id}')" 
-                    title="Export template">
+                    title="خروجی گرفتن از الگو">
               💾 Export
             </button>
             <button class="btn btn-sm btn-danger" 
                     onclick="app.deleteTemplate('${template.id}')" 
-                    title="Delete template">
+                    title="حذف الگو">
               🗑️ Delete
             </button>
           </div>
@@ -166,7 +156,7 @@ function extendAppWithTemplateMethods(app) {
           <!-- Template Info -->
           <div class="form-group">
             <label for="templateName">Template Name *</label>
-            <input type="text" id="templateName" placeholder="e.g., Standard School Day" required>
+            <input type="text" id="templateName" placeholder="مثلاً: روز عادی مدرسه" required>
             <div class="form-help">Give your template a descriptive name</div>
           </div>
           
@@ -200,11 +190,11 @@ function extendAppWithTemplateMethods(app) {
     `;
 
     const buttons = [
-      { text: 'Cancel', class: 'btn btn-secondary', onclick: () => this.closeModal() },
-      { text: 'Create Template', class: 'btn btn-primary', onclick: () => this.createTemplate() }
+      { text: 'انصراف', class: 'btn btn-secondary', onclick: () => this.closeModal() },
+      { text: 'ساخت الگو', class: 'btn btn-primary', onclick: () => this.createTemplate() }
     ];
 
-    this.showModal('Create Schedule Template', modalContent, buttons);
+    this.showModal('ساخت الگوی زمان‌بندی', modalContent, buttons);
     
     setTimeout(() => this.initCreateTemplateForm(), 100);
   };
@@ -258,13 +248,13 @@ function extendAppWithTemplateMethods(app) {
       const sourceDay = document.getElementById('sourceDay').value;
 
       if (!name) {
-        this.showNotification('Template name is required', 'error');
+        this.showNotification('وارد کردن نام الگو الزامی است', 'error');
         document.getElementById('templateName').focus();
         return;
       }
 
       if (!sourceDay) {
-        this.showNotification('Please select a source day', 'error');
+        this.showNotification('لطفاً یک روز مبدأ انتخاب کنید', 'error');
         return;
       }
 
@@ -273,7 +263,7 @@ function extendAppWithTemplateMethods(app) {
       const selectedEventIds = Array.from(checkboxes).map(cb => cb.value);
 
       if (selectedEventIds.length === 0) {
-        this.showNotification('Please select at least one event', 'error');
+        this.showNotification('دست‌کم یک رویداد را انتخاب کنید', 'error');
         return;
       }
 
@@ -319,7 +309,7 @@ function extendAppWithTemplateMethods(app) {
       const templates = this.data?.templates || [];
       
       if (templates.length === 0) {
-        this.showNotification('No templates available', 'warning');
+        this.showNotification('الگویی در دسترس نیست', 'warning');
         return;
       }
 
@@ -395,11 +385,11 @@ function extendAppWithTemplateMethods(app) {
       `;
 
       const buttons = [
-        { text: 'Cancel', class: 'btn btn-secondary', onclick: () => this.closeModal() },
-        { text: 'Apply Template', class: 'btn btn-primary', onclick: () => this.applySelectedTemplate() }
+        { text: 'انصراف', class: 'btn btn-secondary', onclick: () => this.closeModal() },
+        { text: 'اعمال الگو', class: 'btn btn-primary', onclick: () => this.applySelectedTemplate() }
       ];
 
-      this.showModal('Apply Schedule Template', modalContent, buttons);
+      this.showModal('اعمال الگوی زمان‌بندی', modalContent, buttons);
       
       setTimeout(() => {
         this.initApplyTemplateForm();
@@ -499,7 +489,7 @@ function extendAppWithTemplateMethods(app) {
       const enableEvents = document.getElementById('enableEvents').checked;
       
       if (!templateId) {
-        this.showNotification('Please select a template', 'error');
+        this.showNotification('لطفاً یک الگو انتخاب کنید', 'error');
         return;
       }
 
@@ -508,13 +498,13 @@ function extendAppWithTemplateMethods(app) {
         .map(cb => cb.value);
 
       if (selectedDays.length === 0) {
-        this.showNotification('Please select at least one day', 'error');
+        this.showNotification('دست‌کم یک روز را انتخاب کنید', 'error');
         return;
       }
 
       const template = this.data.templates.find(t => t.id === templateId);
       if (!template) {
-        this.showNotification('Template not found', 'error');
+        this.showNotification('الگو یافت نشد', 'error');
         return;
       }
 
@@ -525,7 +515,7 @@ function extendAppWithTemplateMethods(app) {
       const confirmMessage = `Apply "${template.name}" to ${daysList}?\n\n` +
         `This will ${replaceExisting ? 'replace all existing events' : 'add ' + eventCount + ' events'} ` +
         `on the selected days.\n\n` +
-        `This action cannot be undone.`;
+        `این عملیات قابل بازگشت نیست.`;
 
       if (!confirm(confirmMessage)) return;
 
@@ -589,7 +579,7 @@ function extendAppWithTemplateMethods(app) {
   app.previewTemplate = function(templateId) {
     const template = this.data?.templates?.find(t => t.id === templateId);
     if (!template) {
-      this.showNotification('Template not found', 'error');
+      this.showNotification('الگو یافت نشد', 'error');
       return;
     }
 
@@ -655,8 +645,8 @@ function extendAppWithTemplateMethods(app) {
     `;
 
     const buttons = [
-      { text: 'Close', class: 'btn btn-secondary', onclick: () => this.closeModal() },
-      { text: 'Apply Template', class: 'btn btn-primary', onclick: () => { this.closeModal(); this.showApplyTemplateModal(templateId); } }
+      { text: 'بستن', class: 'btn btn-secondary', onclick: () => this.closeModal() },
+      { text: 'اعمال الگو', class: 'btn btn-primary', onclick: () => { this.closeModal(); this.showApplyTemplateModal(templateId); } }
     ];
 
     this.showModal(`Template Preview - ${template.name}`, modalContent, buttons);
@@ -669,7 +659,7 @@ function extendAppWithTemplateMethods(app) {
     try {
       const template = this.data?.templates?.find(t => t.id === templateId);
       if (!template) {
-        this.showNotification('Template not found', 'error');
+        this.showNotification('الگو یافت نشد', 'error');
         return;
       }
 
@@ -702,7 +692,7 @@ function extendAppWithTemplateMethods(app) {
     try {
       const template = this.data?.templates?.find(t => t.id === templateId);
       if (!template) {
-        this.showNotification('Template not found', 'error');
+        this.showNotification('الگو یافت نشد', 'error');
         return;
       }
 
@@ -730,7 +720,7 @@ function extendAppWithTemplateMethods(app) {
       
     } catch (error) {
       console.error('Export failed:', error);
-      this.showNotification('Failed to export template', 'error');
+      this.showNotification('خروجی گرفتن از الگو ناموفق بود', 'error');
     }
   };
 
@@ -765,11 +755,11 @@ function extendAppWithTemplateMethods(app) {
     `;
 
     const buttons = [
-      { text: 'Cancel', class: 'btn btn-secondary', onclick: () => this.closeModal() },
+      { text: 'انصراف', class: 'btn btn-secondary', onclick: () => this.closeModal() },
       { text: '📁 Browse Files', class: 'btn btn-primary', onclick: () => document.getElementById('templateFileInput').click() }
     ];
 
-    this.showModal('Import Template', modalContent, buttons);
+    this.showModal('بازیابی الگو', modalContent, buttons);
     
     setTimeout(() => this.setupTemplateImport(), 100);
   };
@@ -813,7 +803,7 @@ function extendAppWithTemplateMethods(app) {
     if (!file) return;
 
     if (!file.name.endsWith('.json')) {
-      this.showNotification('Please select a JSON file', 'error');
+      this.showNotification('لطفاً یک فایل JSON انتخاب کنید', 'error');
       return;
     }
 
@@ -823,7 +813,7 @@ function extendAppWithTemplateMethods(app) {
 
       // Validate template data
       if (!templateData.name || !Array.isArray(templateData.events)) {
-        throw new Error('Invalid template file format');
+        throw new Error('قالب فایل الگو نامعتبر است');
       }
 
       // Create template
@@ -856,13 +846,13 @@ function extendAppWithTemplateMethods(app) {
     try {
       const template = this.data?.templates?.find(t => t.id === templateId);
       if (!template) {
-        this.showNotification('Template not found', 'error');
+        this.showNotification('الگو یافت نشد', 'error');
         return;
       }
 
       const confirmMessage = `Delete template "${template.name}"?\n\n` +
         `This template has been used ${template.useCount || 0} times.\n\n` +
-        `This action cannot be undone.`;
+        `این عملیات قابل بازگشت نیست.`;
 
       if (!confirm(confirmMessage)) return;
 
@@ -883,10 +873,6 @@ function extendAppWithTemplateMethods(app) {
    * Utility functions
    */
   
-  app.capitalizeFirst = function(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
-
   app.readFileAsText = function(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -897,532 +883,3 @@ function extendAppWithTemplateMethods(app) {
   };
 
 }
-
-// Enhanced template styling
-document.addEventListener('DOMContentLoaded', () => {
-  const templateStyles = document.createElement('style');
-  templateStyles.textContent = `
-    /* Template Cards */
-    .template-card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      transition: all 0.3s ease;
-      border: 2px solid transparent;
-      overflow: hidden;
-    }
-    
-    .template-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-      border-color: #667eea;
-    }
-    
-    .template-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      padding: 1.5rem;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border-bottom: 1px solid #dee2e6;
-    }
-    
-    .template-info {
-      flex: 1;
-    }
-    
-    .template-name {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 0.25rem;
-    }
-    
-    .template-description {
-      color: #6c757d;
-      font-size: 0.9rem;
-      font-style: italic;
-    }
-    
-    .template-badge {
-      background: #667eea;
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-    
-    .template-body {
-      padding: 1.5rem;
-    }
-    
-    .template-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    
-    .stat-item {
-      text-align: center;
-      padding: 0.75rem;
-      background: #f8f9fa;
-      border-radius: 8px;
-      border: 1px solid #e9ecef;
-    }
-    
-    .stat-label {
-      display: block;
-      color: #6c757d;
-      font-size: 0.8rem;
-      margin-bottom: 0.25rem;
-    }
-    
-    .stat-value {
-      display: block;
-      color: #2c3e50;
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-    
-    .template-preview {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 1rem;
-      border: 1px solid #dee2e6;
-    }
-    
-    .preview-header {
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 0.75rem;
-      font-size: 0.9rem;
-    }
-    
-    .preview-events {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    
-    .preview-event {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem;
-      background: white;
-      border-radius: 6px;
-      border: 1px solid #e9ecef;
-    }
-    
-    .preview-time {
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      color: #667eea;
-      min-width: 60px;
-      font-size: 0.9rem;
-    }
-    
-    .preview-name {
-      flex: 1;
-      color: #495057;
-      font-size: 0.9rem;
-    }
-    
-    .preview-more {
-      text-align: center;
-      color: #6c757d;
-      font-style: italic;
-      padding: 0.5rem;
-      font-size: 0.8rem;
-    }
-    
-    .template-empty {
-      text-align: center;
-      color: #6c757d;
-      font-style: italic;
-      padding: 1rem;
-    }
-    
-    .template-actions {
-      display: flex;
-      gap: 0.5rem;
-      padding: 1rem 1.5rem;
-      background: #f8f9fa;
-      border-top: 1px solid #dee2e6;
-      flex-wrap: wrap;
-    }
-    
-    .template-actions .btn {
-      flex: 1;
-      min-width: 80px;
-    }
-    
-    .empty-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      margin-top: 1rem;
-      flex-wrap: wrap;
-    }
-    
-    /* Form Styles */
-    .template-form-container,
-    .apply-template-container,
-    .import-template-container {
-      max-width: 600px;
-    }
-    
-    .template-form,
-    .apply-template-container,
-    .import-template-container {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-    
-    .events-preview {
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      background: #f8f9fa;
-    }
-    
-    .event-preview-item {
-      padding: 0.75rem;
-      border-bottom: 1px solid #e9ecef;
-    }
-    
-    .event-preview-item:last-child {
-      border-bottom: none;
-    }
-    
-    .event-checkbox {
-      display: flex !important;
-      align-items: flex-start;
-      gap: 0.75rem;
-      cursor: pointer;
-    }
-    
-    .event-checkbox input[type="checkbox"] {
-      margin-top: 0.25rem;
-    }
-    
-    .event-preview-info {
-      flex: 1;
-    }
-    
-    .event-preview-time {
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      color: #667eea;
-      margin-bottom: 0.25rem;
-    }
-    
-    .event-preview-name {
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 0.25rem;
-    }
-    
-    .event-preview-details {
-      font-size: 0.8rem;
-      color: #6c757d;
-    }
-    
-    .day-selection {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    
-    .day-checkbox {
-      display: flex !important;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem;
-      background: #f8f9fa;
-      border-radius: 6px;
-      border: 1px solid #dee2e6;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .day-checkbox:hover {
-      background: #e9ecef;
-      border-color: #667eea;
-    }
-    
-    .day-checkbox input:checked {
-      accent-color: #667eea;
-    }
-    
-    .day-selection-helpers {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    
-    .apply-options {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      padding: 1rem;
-      background: #f8f9fa;
-      border-radius: 8px;
-      border: 1px solid #dee2e6;
-    }
-    
-    .option-checkbox {
-      display: flex !important;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .apply-warning {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      color: #856404;
-      padding: 1rem;
-      border-radius: 8px;
-      text-align: center;
-      font-size: 0.9rem;
-    }
-    
-    .template-preview-section {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      padding: 1rem;
-    }
-    
-    .preview-event-item {
-      display: flex;
-      gap: 1rem;
-      padding: 0.75rem;
-      background: white;
-      border-radius: 6px;
-      margin-bottom: 0.5rem;
-      border: 1px solid #e9ecef;
-    }
-    
-    .preview-event-item:last-child {
-      margin-bottom: 0;
-    }
-    
-    .preview-event-time {
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      color: #667eea;
-      min-width: 70px;
-    }
-    
-    .preview-event-name {
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 0.25rem;
-    }
-    
-    .preview-event-details {
-      font-size: 0.8rem;
-      color: #6c757d;
-    }
-    
-    /* Import Styles */
-    .import-area {
-      border: 3px dashed #dee2e6;
-      border-radius: 12px;
-      padding: 3rem 2rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      background: #f8f9fa;
-    }
-    
-    .import-area:hover,
-    .import-area.drag-over {
-      border-color: #667eea;
-      background: #f0f3ff;
-    }
-    
-    .import-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      color: #6c757d;
-    }
-    
-    .import-text {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 0.5rem;
-    }
-    
-    .import-subtext {
-      color: #6c757d;
-      font-size: 0.9rem;
-    }
-    
-    .import-info {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 1rem;
-      border: 1px solid #dee2e6;
-    }
-    
-    .import-info ul {
-      margin: 0.5rem 0 0 1rem;
-      padding: 0;
-    }
-    
-    .import-info li {
-      margin-bottom: 0.25rem;
-      color: #6c757d;
-    }
-    
-    /* Preview Modal Styles */
-    .template-preview-modal {
-      max-width: 700px;
-    }
-    
-    .preview-header-section {
-      text-align: center;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid #e9ecef;
-    }
-    
-    .preview-description {
-      color: #6c757d;
-      font-style: italic;
-      margin-top: 0.5rem;
-    }
-    
-    .preview-stats-section {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-      padding: 1rem;
-      background: #f8f9fa;
-      border-radius: 8px;
-      border: 1px solid #dee2e6;
-    }
-    
-    .preview-stat {
-      text-align: center;
-    }
-    
-    .preview-events-section h5 {
-      color: #495057;
-      margin-bottom: 1rem;
-    }
-    
-    .preview-events-list {
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    
-    .preview-detail-item {
-      display: flex;
-      gap: 1rem;
-      padding: 1rem;
-      background: #f8f9fa;
-      border-radius: 8px;
-      margin-bottom: 0.75rem;
-      border-left: 4px solid #667eea;
-    }
-    
-    .preview-detail-time {
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      color: #667eea;
-      min-width: 80px;
-      font-size: 1.1rem;
-    }
-    
-    .preview-detail-content {
-      flex: 1;
-    }
-    
-    .preview-detail-name {
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .preview-detail-info {
-      color: #6c757d;
-      font-size: 0.9rem;
-      margin-bottom: 0.75rem;
-    }
-    
-    .preview-audio-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-    
-    .audio-chip {
-      background: #667eea;
-      color: white;
-      padding: 0.25rem 0.5rem;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-    
-    .no-events {
-      text-align: center;
-      color: #6c757d;
-      font-style: italic;
-      padding: 2rem;
-    }
-    
-    @media (max-width: 768px) {
-      .template-actions {
-        flex-direction: column;
-      }
-      
-      .template-actions .btn {
-        width: 100%;
-      }
-      
-      .day-selection {
-        grid-template-columns: 1fr;
-      }
-      
-      .day-selection-helpers {
-        justify-content: center;
-      }
-      
-      .template-stats {
-        grid-template-columns: 1fr;
-      }
-      
-      .preview-stats-section {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      
-      .preview-detail-item {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-      
-      .preview-detail-time {
-        min-width: auto;
-      }
-      
-      .empty-actions {
-        flex-direction: column;
-        align-items: center;
-      }
-    }
-  `;
-  document.head.appendChild(templateStyles);
-});

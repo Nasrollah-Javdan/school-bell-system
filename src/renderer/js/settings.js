@@ -4,19 +4,189 @@
  * Extracted from app.js to reduce complexity and improve maintainability
  */
 
-// Extend the main app with settings-specific methods
-if (typeof window !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    // Wait for app to be initialized
-    setTimeout(() => {
-      if (window.app) {
-        extendAppWithSettingsMethods(window.app);
-      }
-    }, 100);
-  });
-}
+import { theme } from './theme.js';
+import { toPersianDigits } from './fa.js';
 
-function extendAppWithSettingsMethods(app) {
+// Extend the main app with settings-specific methods
+export function extendAppWithSettingsMethods(app) {
+
+  /* ==========================================================================
+     Auto-update card
+     ========================================================================== */
+
+  /** UI state for the update card. */
+  app.updateState = {
+    checking: false,
+    available: false,
+    downloaded: false,
+    busy: false
+  };
+
+  /**
+   * Paint the update card from a main-process status payload.
+   * @param {{status: string, message: string, data?: object}} payload
+   */
+  app.applyUpdateStatus = function(payload) {
+    const box = document.getElementById('updateStatus');
+    const icon = document.getElementById('updateStatusIcon');
+    const text = document.getElementById('updateStatusText');
+    const progress = document.getElementById('updateProgress');
+    const bar = document.getElementById('updateProgressBar');
+    const progressLabel = document.getElementById('updateProgressLabel');
+    const installBtn = document.getElementById('installUpdateBtn');
+    const checkBtn = document.getElementById('checkUpdateBtn');
+    if (!box || !icon || !text) return;
+
+    const set = (state, iconChar, message) => {
+      box.dataset.state = state;
+      icon.textContent = iconChar;
+      text.textContent = message;
+    };
+
+    switch (payload.status) {
+      case 'checking':
+        this.updateState.checking = true;
+        set('checking', '🔄', payload.message);
+        if (checkBtn) checkBtn.disabled = true;
+        break;
+
+      case 'available':
+        this.updateState.checking = false;
+        this.updateState.available = true;
+        set('available', '⬆️', payload.message);
+        if (checkBtn) {
+          checkBtn.disabled = true;
+          checkBtn.innerHTML = '<span class="btn-icon" aria-hidden="true">⬇️</span> دانلود نسخه جدید';
+        }
+        break;
+
+      case 'downloading': {
+        const percent = payload.data?.percent ?? 0;
+        this.updateState.busy = true;
+        set('checking', '⬇️', payload.message);
+        if (progress) progress.hidden = false;
+        if (bar) bar.style.width = `${percent}%`;
+        if (progressLabel) progressLabel.textContent = toPersianDigits(percent) + '٪';
+        break;
+      }
+
+      case 'downloaded':
+        this.updateState.busy = false;
+        this.updateState.downloaded = true;
+        set('downloaded', '✅', payload.message);
+        if (progress) progress.hidden = true;
+        if (installBtn) installBtn.hidden = false;
+        if (checkBtn) {
+          checkBtn.disabled = true;
+          checkBtn.innerHTML = '<span class="btn-icon" aria-hidden="true">✔️</span> به‌روزرسانی آماده است';
+        }
+        break;
+
+      case 'not-available':
+        this.updateState.checking = false;
+        this.updateState.available = false;
+        set('ok', '✔️', payload.message);
+        if (checkBtn) {
+          checkBtn.disabled = false;
+          checkBtn.innerHTML = '<span class="btn-icon" aria-hidden="true">🔄</span> بررسی نسخه جدید';
+        }
+        break;
+
+      case 'error':
+        this.updateState.checking = false;
+        this.updateState.busy = false;
+        set('error', '⚠️', payload.message);
+        if (checkBtn) {
+          checkBtn.disabled = false;
+          checkBtn.innerHTML = '<span class="btn-icon" aria-hidden="true">🔄</span> تلاش دوباره';
+        }
+        break;
+    }
+  };
+
+  /** Load the installed version into the card. */
+  app.refreshUpdateInfo = async function() {
+    const el = document.getElementById('currentVersion');
+    if (!window.electronAPI?.updater) return;
+
+    try {
+      const info = await window.electronAPI.updater.getVersion();
+      if (el) el.textContent = info.current || '—';
+      if (info.isDevelopment) {
+        this.showNotification('به‌روزرسانی خودکار در حالت توسعه غیرفعال است.', 'info');
+      }
+    } catch (error) {
+      console.error('Could not read version info:', error);
+    }
+  };
+
+  /** Manual "check for updates". */
+  app.handleCheckUpdate = async function() {
+    if (!window.electronAPI?.updater) return;
+    try {
+      await window.electronAPI.updater.checkForUpdates();
+    } catch (error) {
+      console.error('Update check failed:', error);
+      this.applyUpdateStatus({ status: 'error', message: 'بررسی نسخه جدید ناموفق بود.' });
+    }
+  };
+
+  /** Download the available update. */
+  app.handleDownloadUpdate = async function() {
+    if (!window.electronAPI?.updater) return;
+    const result = await window.electronAPI.updater.downloadUpdate();
+    if (result && !result.success) {
+      this.applyUpdateStatus({ status: 'error', message: result.error });
+    }
+  };
+
+  /** Install the downloaded update and restart. Backs up data first. */
+  app.handleInstallUpdate = async function() {
+    if (!window.electronAPI?.updater) return;
+
+    const confirmed = await this.confirmAction({
+      title: 'نصب نسخه جدید',
+      message: 'نسخه جدید اکنون نصب می‌شود و برنامه دوباره اجرا می‌گردد.<br><br>' +
+               'پیش از نصب، یک نسخه پشتیبان از برنامه‌ها و فایل‌های صوتی شما گرفته می‌شود.',
+      confirmText: 'نصب و راه‌اندازی مجدد',
+      danger: false
+    });
+    if (!confirmed) return;
+
+    const btn = document.getElementById('installUpdateBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'در حال آماده‌سازی…';
+    }
+
+    try {
+      const result = await window.electronAPI.updater.installUpdate();
+      if (result?.backup?.success) {
+        this.showNotification('نسخه پشتیبان از داده‌های شما گرفته شد.', 'success');
+      }
+    } catch (error) {
+      console.error('Update install failed:', error);
+      this.applyUpdateStatus({ status: 'error', message: 'نصب نسخه جدید ناموفق بود.' });
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'نصب و راه‌اندازی مجدد';
+      }
+    }
+  };
+
+  /** Reveal %APPDATA%\School Bell System in Explorer. */
+  app.handleOpenDataFolder = async function() {
+    if (!window.electronAPI?.updater) return;
+    try {
+      await window.electronAPI.updater.openDataFolder();
+    } catch (error) {
+      console.error('Could not open data folder:', error);
+    }
+  };
+
+  /* ==========================================================================
+     Settings view
+     ========================================================================== */
 
   /**
    * Update settings view and populate current values
@@ -26,6 +196,7 @@ function extendAppWithSettingsMethods(app) {
       await this.loadData();
       this.populateSettingsForm();
       this.setupSettingsEventListeners();
+      await this.refreshUpdateInfo();
     } catch (error) {
       console.error('Failed to update settings:', error);
     }
@@ -36,6 +207,14 @@ function extendAppWithSettingsMethods(app) {
    */
   app.populateSettingsForm = function() {
     const settings = this.data?.settings || {};
+
+    // Theme
+    const themeSelect = document.getElementById('themeSelect');
+    if (themeSelect) {
+      // The theme manager owns the live preference; reflect it here
+      themeSelect.value = settings.theme || theme.preference || 'system';
+      theme.syncControls();
+    }
     
     // Volume settings
     const volumeSlider = document.getElementById('volumeSlider');
@@ -77,104 +256,59 @@ function extendAppWithSettingsMethods(app) {
   };
 
   /**
-   * Set up settings event listeners
+   * Bind settings controls.
+   *
+   * Runs on every visit to the Settings tab, so binding is guarded by a flag
+   * on each control. (The previous `removeEventListener` calls could never
+   * match, because the handlers were freshly created arrow functions - which
+   * meant every visit stacked another copy of each listener.)
    */
   app.setupSettingsEventListeners = async function() {
-    
-    // Show password change in production mode, hide in development mode  
-    try {
-      const isDevelopment = await window.electronAPI.isDevelopment();
-      const changePasswordBtn = document.getElementById('changePasswordBtn');
-      const securityGroup = changePasswordBtn?.closest('.settings-group');
-      
-      if (isDevelopment && securityGroup) {
-        securityGroup.style.display = 'none';
-      }
-    } catch (error) {
-      console.warn('Failed to check development mode for security settings:', error);
-    }
-    
+    const bind = (element, event, handler) => {
+      if (!element) return;
+      const key = `bound_${event}`;
+      if (element.dataset[key] === 'true') return;
+      element.dataset[key] = 'true';
+      element.addEventListener(event, handler);
+    };
+
     // Volume slider
     const volumeSlider = document.getElementById('volumeSlider');
-    if (volumeSlider) {
-      // Remove existing listeners to avoid duplicates
-      volumeSlider.removeEventListener('input', this.handleVolumeChange);
-      volumeSlider.removeEventListener('change', this.handleVolumeChange);
-      
-      // Add new listeners
-      volumeSlider.addEventListener('input', (e) => this.handleVolumeChange(e));
-      volumeSlider.addEventListener('change', (e) => this.handleVolumeChange(e));
-    }
-    
+    bind(volumeSlider, 'input', (e) => this.handleVolumeChange(e));
+    bind(volumeSlider, 'change', (e) => this.handleVolumeChange(e));
+
+    // Appearance
+    bind(document.getElementById('themeSelect'), 'change', (e) => {
+      theme.set(e.target.value);
+    });
+
     // Auto start checkbox
-    const autoStart = document.getElementById('autoStartCheckbox');
-    if (autoStart) {
-      autoStart.removeEventListener('change', this.handleAutoStartChange);
-      autoStart.addEventListener('change', (e) => this.handleAutoStartChange(e));
-    }
-    
+    bind(document.getElementById('autoStartCheckbox'), 'change', (e) => this.handleAutoStartChange(e));
+
     // Log level dropdown
-    const logLevel = document.getElementById('logLevel');
-    if (logLevel) {
-      logLevel.removeEventListener('change', this.handleLogLevelChange);
-      logLevel.addEventListener('change', (e) => this.handleLogLevelChange(e));
-    }
-    
+    bind(document.getElementById('logLevel'), 'change', (e) => this.handleLogLevelChange(e));
+
     // Max log entries
-    const maxLogEntries = document.getElementById('maxLogEntries');
-    if (maxLogEntries) {
-      maxLogEntries.removeEventListener('change', this.handleMaxLogEntriesChange);
-      maxLogEntries.addEventListener('change', (e) => this.handleMaxLogEntriesChange(e));
-    }
-    
+    bind(document.getElementById('maxLogEntries'), 'change', (e) => this.handleMaxLogEntriesChange(e));
+
     // Audio repeat interval
-    const audioRepeatInterval = document.getElementById('audioRepeatInterval');
-    if (audioRepeatInterval) {
-      audioRepeatInterval.removeEventListener('change', this.handleAudioRepeatIntervalChange);
-      audioRepeatInterval.addEventListener('change', (e) => this.handleAudioRepeatIntervalChange(e));
-    }
+    bind(document.getElementById('audioRepeatInterval'), 'change', (e) => this.handleAudioRepeatIntervalChange(e));
 
-    // Change audio path button
-    const changePathBtn = document.getElementById('changePathBtn');
-    if (changePathBtn) {
-      changePathBtn.removeEventListener('click', this.handleChangeAudioPath);
-      changePathBtn.addEventListener('click', () => this.handleChangeAudioPath());
-    }
-    
-    // Security buttons
-    const changePasswordBtn = document.getElementById('changePasswordBtn');
-    if (changePasswordBtn) {
-      changePasswordBtn.removeEventListener('click', this.handleChangePassword);
-      changePasswordBtn.addEventListener('click', () => this.handleChangePassword());
-    }
+    // Buttons
+    bind(document.getElementById('changePathBtn'), 'click', () => this.handleChangeAudioPath());
+    bind(document.getElementById('restartAppBtn'), 'click', () => this.handleRestartApp());
+    bind(document.getElementById('exportDataBtn'), 'click', () => this.handleExportData());
+    bind(document.getElementById('importDataBtn'), 'click', () => this.handleImportData());
+    bind(document.getElementById('resetDataBtn'), 'click', () => this.handleResetData());
 
-    // Application control buttons
-    const restartAppBtn = document.getElementById('restartAppBtn');
-    if (restartAppBtn) {
-      restartAppBtn.removeEventListener('click', this.handleRestartApp);
-      restartAppBtn.addEventListener('click', () => this.handleRestartApp());
-    }
-
-    // Data management buttons
-    const exportDataBtn = document.getElementById('exportDataBtn');
-    const importDataBtn = document.getElementById('importDataBtn');
-    const resetDataBtn = document.getElementById('resetDataBtn');
-    
-    if (exportDataBtn) {
-      exportDataBtn.removeEventListener('click', this.handleExportData);
-      exportDataBtn.addEventListener('click', () => this.handleExportData());
-    }
-    
-    if (importDataBtn) {
-      importDataBtn.removeEventListener('click', this.handleImportData);
-      importDataBtn.addEventListener('click', () => this.handleImportData());
-    }
-    
-    if (resetDataBtn) {
-      resetDataBtn.removeEventListener('click', this.handleResetData);
-      resetDataBtn.addEventListener('click', () => this.handleResetData());
-    }
-    
+    // Auto-update card
+    bind(document.getElementById('checkUpdateBtn'), 'click', (e) => {
+      const label = e.currentTarget.textContent.includes('دانلود');
+      if (label) this.handleDownloadUpdate();
+      else this.handleCheckUpdate();
+    });
+    bind(document.getElementById('installUpdateBtn'), 'click', () => this.handleInstallUpdate());
+    bind(document.getElementById('openDataFolderBtn'), 'click', () => this.handleOpenDataFolder());
   };
 
   /**
@@ -297,7 +431,7 @@ function extendAppWithSettingsMethods(app) {
       
     } catch (error) {
       console.error('Failed to update log level:', error);
-      this.showNotification('Failed to update log level', 'error');
+      this.showNotification('تغییر سطح گزارش ناموفق بود', 'error');
     }
   };
 
@@ -308,7 +442,7 @@ function extendAppWithSettingsMethods(app) {
     const maxEntries = parseInt(e.target.value);
     
     if (maxEntries < 100 || maxEntries > 10000) {
-      this.showNotification('Max log entries must be between 100 and 10,000', 'error');
+      this.showNotification('بیشینه تعداد گزارش‌ها باید بین ۱۰۰ تا ۱۰٬۰۰۰ باشد', 'error');
       e.target.value = this.data?.settings?.maxLogEntries || 1000;
       return;
     }
@@ -320,7 +454,7 @@ function extendAppWithSettingsMethods(app) {
       
     } catch (error) {
       console.error('Failed to update max log entries:', error);
-      this.showNotification('Failed to update max log entries', 'error');
+      this.showNotification('تغییر بیشینه تعداد گزارش‌ها ناموفق بود', 'error');
     }
   };
 
@@ -331,7 +465,7 @@ function extendAppWithSettingsMethods(app) {
     const interval = parseFloat(e.target.value);
     
     if (isNaN(interval) || interval < 0 || interval > 30) {
-      this.showNotification('Audio repeat interval must be between 0 and 30 seconds', 'error');
+      this.showNotification('فاصله تکرار باید بین ۰ تا ۳۰ ثانیه باشد', 'error');
       e.target.value = this.data?.settings?.audioRepeatInterval || 3;
       return;
     }
@@ -343,151 +477,7 @@ function extendAppWithSettingsMethods(app) {
       
     } catch (error) {
       console.error('Failed to update audio repeat interval:', error);
-      this.showNotification('Failed to update audio repeat interval', 'error');
-    }
-  };
-
-  /**
-   * Handle change password button
-   */
-  app.handleChangePassword = async function() {
-    const modalContent = `
-      <div class="change-password-modal">
-        <div class="password-change-header">
-          <div class="password-icon">🔑</div>
-          <h3>Change Password</h3>
-          <p>Enter your current and new password</p>
-        </div>
-        
-        <form id="changePasswordForm" class="password-change-form">
-          <div class="form-group">
-            <label for="currentPasswordInput">Current Password</label>
-            <input type="password" id="currentPasswordInput" placeholder="Enter current password" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="newPasswordInput">New Password</label>
-            <input type="password" id="newPasswordInput" placeholder="Enter new password" required minlength="6">
-            <div class="form-help">At least 6 characters with numbers</div>
-          </div>
-          
-          <div class="form-group">
-            <label for="confirmPasswordInput">Confirm New Password</label>
-            <input type="password" id="confirmPasswordInput" placeholder="Confirm new password" required>
-          </div>
-        </form>
-      </div>
-    `;
-
-    const buttons = [
-      {
-        text: 'Cancel',
-        class: 'btn btn-secondary',
-        onclick: () => this.closeModal()
-      },
-      {
-        text: 'Change Password',
-        class: 'btn btn-primary',
-        onclick: () => this.processPasswordChange()
-      }
-    ];
-
-    this.showModal('Change Password', modalContent, buttons, true, 'auth-modal');
-    
-    setTimeout(() => {
-      document.getElementById('currentPasswordInput').focus();
-      this.setupPasswordChangeFormHandlers();
-    }, 100);
-  };
-
-  /**
-   * Setup password change form handlers
-   */
-  app.setupPasswordChangeFormHandlers = function() {
-    const form = document.getElementById('changePasswordForm');
-    const currentPassword = document.getElementById('currentPasswordInput');
-    const newPassword = document.getElementById('newPasswordInput');
-    const confirmPassword = document.getElementById('confirmPasswordInput');
-
-    // Handle Enter key presses
-    [currentPassword, newPassword, confirmPassword].forEach(input => {
-      input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          this.processPasswordChange();
-        }
-      });
-    });
-
-    // Real-time password confirmation validation
-    const validatePasswords = () => {
-      if (newPassword.value && confirmPassword.value) {
-        if (newPassword.value === confirmPassword.value) {
-          confirmPassword.setCustomValidity('');
-          confirmPassword.classList.remove('error');
-        } else {
-          confirmPassword.setCustomValidity('Passwords do not match');
-          confirmPassword.classList.add('error');
-        }
-      }
-    };
-
-    newPassword.addEventListener('input', validatePasswords);
-    confirmPassword.addEventListener('input', validatePasswords);
-  };
-
-  /**
-   * Process password change
-   */
-  app.processPasswordChange = async function() {
-    try {
-      const currentPassword = document.getElementById('currentPasswordInput').value;
-      const newPassword = document.getElementById('newPasswordInput').value;
-      const confirmPassword = document.getElementById('confirmPasswordInput').value;
-
-      // Validate inputs
-      if (!currentPassword) {
-        this.showNotification('Please enter your current password', 'error');
-        document.getElementById('currentPasswordInput').focus();
-        return;
-      }
-
-      if (!newPassword) {
-        this.showNotification('Please enter a new password', 'error');
-        document.getElementById('newPasswordInput').focus();
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        this.showNotification('New passwords do not match', 'error');
-        document.getElementById('confirmPasswordInput').focus();
-        return;
-      }
-
-      if (newPassword.length < 6) {
-        this.showNotification('New password must be at least 6 characters long', 'error');
-        document.getElementById('newPasswordInput').focus();
-        return;
-      }
-
-      if (!/\d/.test(newPassword)) {
-        this.showNotification('New password must contain at least one number', 'error');
-        document.getElementById('newPasswordInput').focus();
-        return;
-      }
-
-      const result = await window.electronAPI.changePassword(currentPassword, newPassword);
-      
-      if (result.success) {
-        this.closeModal();
-        this.showNotification('Password changed successfully', 'success');
-      } else {
-        this.showNotification(result.error || 'Failed to change password. Please check your current password.', 'error');
-      }
-      
-    } catch (error) {
-      console.error('Failed to change password:', error);
-      this.showNotification('Failed to change password. Please try again.', 'error');
+      this.showNotification('تغییر فاصله تکرار ناموفق بود', 'error');
     }
   };
 
@@ -514,9 +504,9 @@ function extendAppWithSettingsMethods(app) {
   app.handleChangeAudioPath = async function() {
     try {
       const result = await window.electronAPI.showOpenDialog({
-        title: 'Select Audio Files Directory',
+        title: 'انتخاب پوشه فایل‌های صوتی',
         properties: ['openDirectory'],
-        buttonLabel: 'Select Directory'
+        buttonLabel: 'انتخاب پوشه'
       });
       
       if (!result.canceled && result.filePaths.length > 0) {
@@ -530,13 +520,13 @@ function extendAppWithSettingsMethods(app) {
           audioPathInput.value = newPath;
         }
         
-        this.showNotification('Audio path updated successfully', 'success');
+        this.showNotification('مسیر فایل‌های صوتی به‌روزرسانی شد', 'success');
         console.log('Audio path updated:', newPath);
       }
       
     } catch (error) {
       console.error('Failed to change audio path:', error);
-      this.showNotification('Failed to change audio path', 'error');
+      this.showNotification('تغییر مسیر فایل‌های صوتی ناموفق بود', 'error');
     }
   };
 
@@ -546,23 +536,23 @@ function extendAppWithSettingsMethods(app) {
   app.handleExportData = async function() {
     try {
       const result = await window.electronAPI.showSaveDialog({
-        title: 'Export School Bell Data',
+        title: 'خروجی گرفتن از داده‌های زنگ مدرسه',
         defaultPath: `school-bell-backup-${new Date().toISOString().split('T')[0]}.json`,
         filters: [
-          { name: 'JSON Files', extensions: ['json'] },
-          { name: 'All Files', extensions: ['*'] }
+          { name: 'فایل‌های JSON', extensions: ['json'] },
+          { name: 'همه فایل‌ها', extensions: ['*'] }
         ]
       });
       
       if (!result.canceled && result.filePath) {
         // The main process handles the actual export
-        this.showNotification('Data export started...', 'info');
+        this.showNotification('خروجی گرفتن از داده‌ها آغاز شد…', 'info');
         console.log('Data export initiated');
       }
       
     } catch (error) {
       console.error('Failed to export data:', error);
-      this.showNotification('Failed to export data', 'error');
+      this.showNotification('خروجی گرفتن از داده‌ها ناموفق بود', 'error');
     }
   };
 
@@ -575,16 +565,16 @@ function extendAppWithSettingsMethods(app) {
       if (!confirmed) return;
       
       const result = await window.electronAPI.showOpenDialog({
-        title: 'Import School Bell Data',
+        title: 'بازیابی داده‌های زنگ مدرسه',
         filters: [
-          { name: 'JSON Files', extensions: ['json'] },
-          { name: 'All Files', extensions: ['*'] }
+          { name: 'فایل‌های JSON', extensions: ['json'] },
+          { name: 'همه فایل‌ها', extensions: ['*'] }
         ],
         properties: ['openFile']
       });
       
       if (!result.canceled && result.filePaths.length > 0) {
-        this.showNotification('Data import started...', 'info');
+        this.showNotification('بازیابی داده‌ها آغاز شد…', 'info');
         console.log('Data import initiated');
         
         // The main process handles the actual import and will reload the window
@@ -592,7 +582,7 @@ function extendAppWithSettingsMethods(app) {
       
     } catch (error) {
       console.error('Failed to import data:', error);
-      this.showNotification('Failed to import data', 'error');
+      this.showNotification('بازیابی داده‌ها ناموفق بود', 'error');
     }
   };
 
@@ -619,7 +609,7 @@ function extendAppWithSettingsMethods(app) {
       // Clear logs
       await window.electronAPI.clearLogs();
       
-      this.showNotification('Data reset completed. Please restart the application.', 'success');
+      this.showNotification('بازنشانی داده‌ها انجام شد. لطفاً برنامه را دوباره اجرا کنید.', 'success');
       console.log('Data reset completed');
       
       // Recommend restart
@@ -629,7 +619,7 @@ function extendAppWithSettingsMethods(app) {
       
     } catch (error) {
       console.error('Failed to reset data:', error);
-      this.showNotification('Failed to reset data', 'error');
+      this.showNotification('بازنشانی داده‌ها ناموفق بود', 'error');
     }
   };
 
@@ -672,17 +662,17 @@ function extendAppWithSettingsMethods(app) {
     
     const volume = parseInt(document.getElementById('volumeSlider')?.value);
     if (isNaN(volume) || volume < 0 || volume > 100) {
-      errors.push({ field: 'volumeSlider', message: 'Volume must be between 0 and 100' });
+      errors.push({ field: 'volumeSlider', message: 'بلندی صدا باید بین ۰ تا ۱۰۰ باشد' });
     }
 
     const audioRepeatInterval = parseFloat(document.getElementById('audioRepeatInterval')?.value);
     if (isNaN(audioRepeatInterval) || audioRepeatInterval < 0 || audioRepeatInterval > 30) {
-      errors.push({ field: 'audioRepeatInterval', message: 'Audio repeat interval must be between 0 and 30 seconds' });
+      errors.push({ field: 'audioRepeatInterval', message: 'فاصله تکرار باید بین ۰ تا ۳۰ ثانیه باشد' });
     }
     
     const maxLogEntries = parseInt(document.getElementById('maxLogEntries')?.value);
     if (isNaN(maxLogEntries) || maxLogEntries < 100 || maxLogEntries > 10000) {
-      errors.push({ field: 'maxLogEntries', message: 'Max log entries must be between 100 and 10,000' });
+      errors.push({ field: 'maxLogEntries', message: 'بیشینه تعداد گزارش‌ها باید بین ۱۰۰ تا ۱۰٬۰۰۰ باشد' });
     }
     
     return errors;
@@ -767,172 +757,7 @@ function extendAppWithSettingsMethods(app) {
       </div>
     `;
 
-    this.showModal('Settings Help', helpContent);
+    this.showModal('راهنمای تنظیمات', helpContent);
   };
 
 }
-
-// Add enhanced settings styling
-document.addEventListener('DOMContentLoaded', () => {
-  const settingsStyles = document.createElement('style');
-  settingsStyles.textContent = `
-    .settings-help {
-      max-width: 600px;
-    }
-    
-    .help-section {
-      margin-bottom: 1.5rem;
-      padding: 1rem;
-      background: #f8f9fa;
-      border-radius: 8px;
-      border-left: 4px solid #667eea;
-    }
-    
-    .help-section h5 {
-      color: #495057;
-      margin-bottom: 0.75rem;
-      font-size: 1.1rem;
-    }
-    
-    .help-section p {
-      margin-bottom: 0.5rem;
-      line-height: 1.5;
-    }
-    
-    .help-section p:last-child {
-      margin-bottom: 0;
-    }
-    
-    .form-control.error {
-      border-color: #dc3545 !important;
-      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
-      animation: shake 0.5s ease-in-out;
-    }
-    
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-3px); }
-      75% { transform: translateX(3px); }
-    }
-    
-    .setting-item {
-      position: relative;
-    }
-    
-    .setting-item .form-help {
-      transition: color 0.3s ease;
-    }
-    
-    .setting-item:hover .form-help {
-      color: #495057;
-    }
-    
-    .volume-control {
-      background: #f8f9fa;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: 2px solid #e9ecef;
-      transition: border-color 0.3s ease;
-    }
-    
-    .volume-control:hover {
-      border-color: #667eea;
-    }
-    
-    .path-control {
-      background: #f8f9fa;
-      padding: 0.5rem;
-      border-radius: 8px;
-      border: 2px solid #e9ecef;
-    }
-
-    .interval-control {
-      background: #f8f9fa;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: 2px solid #e9ecef;
-      transition: border-color 0.3s ease;
-    }
-
-    .interval-control:hover {
-      border-color: #667eea;
-    }
-
-    .interval-control input {
-      width: 80px;
-      margin-right: 1rem;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
-      padding: 0.25rem 0.5rem;
-      text-align: center;
-    }
-
-    .interval-help {
-      font-size: 0.85rem;
-      color: #6c757d;
-      font-style: italic;
-    }
-    
-    .setting-actions {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 1rem;
-      background: #f8f9fa;
-      border-radius: 8px;
-      border: 2px solid #e9ecef;
-    }
-    
-    .setting-actions .btn {
-      min-width: 140px;
-    }
-
-    /* Password Change Modal Styles */
-    .change-password-modal {
-      max-width: 380px;
-      text-align: center;
-    }
-
-    .password-change-header {
-      margin-bottom: 1rem;
-    }
-
-    .password-change-header h3 {
-      font-size: 1.25rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .password-change-header p {
-      font-size: 0.9rem;
-      margin: 0;
-      color: #6c757d;
-    }
-
-    .password-icon {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .password-change-form {
-      text-align: left;
-      margin: 0.75rem 0;
-    }
-
-    .password-change-form .form-group {
-      margin-bottom: 0.75rem;
-    }
-
-    .password-change-form .form-group input.error {
-      border-color: #dc3545;
-      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
-    }
-
-    .password-change-form .form-help {
-      font-size: 0.8rem;
-      color: #6c757d;
-      margin-top: 0.25rem;
-    }
-  `;
-  document.head.appendChild(settingsStyles);
-});

@@ -1,18 +1,13 @@
-if (typeof window !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      if (window.app) {
-        extendAppWithAudioMethods(window.app);
-      }
-    }, 100);
-  });
-}
+/**
+ * Audio library behaviour for the School Bell System.
+ * Mixed into the application object by `main.js`.
+ */
+import { formatFileSize, getFileTypeDisplay, formatUploadDate } from './utils.js';
 
-function extendAppWithAudioMethods(app) {
-
+export function extendAppWithAudioMethods(app) {
   app.updateAudioLibrary = async function() {
     try {
-      this.showNotification('Loading audio library...', 'info');
+      this.showNotification('در حال بارگذاری کتابخانه صوتی…', 'info');
       await this.loadData();
       await this.renderAudioFiles();
       this.setupAudioDragDrop();
@@ -20,7 +15,7 @@ function extendAppWithAudioMethods(app) {
       // Refresh audio playing state from HTML5 player
       this.refreshAudioPlayingState();
     } catch (error) {
-      this.showNotification('Failed to load audio library', 'error');
+      this.showNotification('بارگذاری کتابخانه صوتی ناموفق بود', 'error');
     }
   };
 
@@ -50,47 +45,50 @@ function extendAppWithAudioMethods(app) {
       const audioHTML = audioFiles.map(audioFile => {
         const isAvailable = availableFiles.includes(audioFile.filename);
         const statusClass = isAvailable ? 'available' : 'missing';
-        const statusText = isAvailable ? '✅ Available' : '❌ Missing';
+        const statusText = isAvailable ? 'موجود' : 'در حافظه موجود نیست';
         const statusIcon = isAvailable ? '✅' : '⚠️';
         
         return `
           <div class="audio-file ${statusClass}" data-id="${audioFile.id}" data-filename="${audioFile.filename}">
-            <div class="audio-header">
-              <div class="audio-checkbox">
-                <input type="checkbox" class="audio-select" data-id="${audioFile.id}" onchange="app.updateBulkActions()">
+            <div class="audio-file__header">
+              <div class="audio-file__checkbox">
+                <input type="checkbox" class="audio-select" data-id="${audioFile.id}"
+                       onchange="app.updateBulkActions()"
+                       aria-label="Select ${this.escapeHtml(audioFile.name)}">
               </div>
-              <div class="audio-info">
-                <div class="audio-name">${this.escapeHtml(audioFile.name)}</div>
-                <div class="audio-filename">${this.escapeHtml(audioFile.filename)}</div>
-                <div class="audio-metadata">
-                  <span class="audio-size">${this.formatFileSize(audioFile.size)}</span>
-                  <span class="audio-type">${this.getFileTypeDisplay(audioFile.filename)}</span>
-                  <span class="audio-uploaded">${this.formatUploadDate(audioFile.uploadedAt)}</span>
+              <div class="audio-file__info">
+                <div class="audio-file__name">${this.escapeHtml(audioFile.name)}</div>
+                <div class="audio-file__filename" title="${this.escapeHtml(audioFile.filename)}">${this.escapeHtml(audioFile.filename)}</div>
+                <div class="audio-file__meta">
+                  <span class="audio-file__status" data-available="${isAvailable}">${statusIcon} ${statusText}</span>
+                  <span class="audio-file__size">${this.formatFileSize(audioFile.size)}</span>
+                  <span class="audio-file__type">${this.getFileTypeDisplay(audioFile.filename)}</span>
+                  <span class="audio-file__uploaded">${this.formatUploadDate(audioFile.uploadedAt)}</span>
                 </div>
               </div>
-              <div class="audio-controls">
-                <button class="btn btn-sm btn-success play-btn" 
-                        onclick="app.testAudio('${audioFile.filename}')" 
-                        title="Play this audio file"
-                        ${!isAvailable ? 'disabled' : ''}>
-                  ▶️ Play
-                </button>
-                <button class="btn btn-sm btn-secondary stop-btn" 
-                        onclick="app.stopAudio()" 
-                        title="Stop all audio">
-                  ⏹️ Stop
-                </button>
-                <button class="btn btn-sm btn-info" 
-                        onclick="app.showAudioDetails('${audioFile.id}')" 
-                        title="View details">
-                  ℹ️ Details
-                </button>
-                <button class="btn btn-sm btn-danger" 
-                        onclick="app.deleteAudio('${audioFile.id}', '${this.escapeHtml(audioFile.name)}')" 
-                        title="Delete this audio file">
-                  🗑️ Delete
-                </button>
-              </div>
+            </div>
+            <div class="audio-file__controls">
+              <button class="btn btn-sm btn-success play-btn" 
+                      onclick="app.testAudio('${audioFile.filename}')" 
+                      title="پخش این فایل صوتی"
+                      ${!isAvailable ? 'disabled' : ''}>
+                ▶️ Play
+              </button>
+              <button class="btn btn-sm btn-secondary stop-btn" 
+                      onclick="app.stopAudio()" 
+                      title="توقف همه صداها">
+                ⏹️ Stop
+              </button>
+              <button class="btn btn-sm btn-info" 
+                      onclick="app.showAudioDetails('${audioFile.id}')" 
+                      title="مشاهده جزئیات">
+                ℹ️ Details
+              </button>
+              <button class="btn btn-sm btn-danger" 
+                      onclick="app.deleteAudio('${audioFile.id}', '${this.escapeHtml(audioFile.name)}')" 
+                      title="حذف این فایل صوتی">
+                🗑️ Delete
+              </button>
             </div>
           </div>
         `;
@@ -116,23 +114,31 @@ function extendAppWithAudioMethods(app) {
     } catch (error) {
       const audioHTML = audioFiles.map(audioFile => `
         <div class="audio-file unknown" data-id="${audioFile.id}" data-filename="${audioFile.filename}">
-          <div class="audio-header">
-            <div class="audio-info">
-              <div class="audio-name">${this.escapeHtml(audioFile.name)}</div>
-              <div class="audio-filename">${this.escapeHtml(audioFile.filename)}</div>
-              <div class="audio-size">${this.formatFileSize(audioFile.size)}</div>
+          <div class="audio-file__header">
+            <div class="audio-file__checkbox">
+              <input type="checkbox" class="audio-select" data-id="${audioFile.id}"
+                     onchange="app.updateBulkActions()"
+                     aria-label="Select ${this.escapeHtml(audioFile.name)}">
             </div>
-            <div class="audio-controls">
-              <button class="btn btn-sm btn-success play-btn" onclick="app.testAudio('${audioFile.filename}')">
-                ▶️ Play
-              </button>
-              <button class="btn btn-sm btn-secondary stop-btn" onclick="app.stopAudio()">
-                ⏹️ Stop
-              </button>
-              <button class="btn btn-sm btn-danger" onclick="app.deleteAudio('${audioFile.id}', '${this.escapeHtml(audioFile.name)}')">
-                🗑️ Delete
-              </button>
+            <div class="audio-file__info">
+              <div class="audio-file__name">${this.escapeHtml(audioFile.name)}</div>
+              <div class="audio-file__filename" title="${this.escapeHtml(audioFile.filename)}">${this.escapeHtml(audioFile.filename)}</div>
+              <div class="audio-file__meta">
+                <span class="audio-file__status" data-available="false">⚠️ Status unknown</span>
+                <span class="audio-file__size">${this.formatFileSize(audioFile.size)}</span>
+              </div>
             </div>
+          </div>
+          <div class="audio-file__controls">
+            <button class="btn btn-sm btn-success play-btn" onclick="app.testAudio('${audioFile.filename}')">
+              ▶️ Play
+            </button>
+            <button class="btn btn-sm btn-secondary stop-btn" onclick="app.stopAudio()">
+              ⏹️ Stop
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="app.deleteAudio('${audioFile.id}', '${this.escapeHtml(audioFile.name)}')">
+              🗑️ Delete
+            </button>
           </div>
         </div>
       `).join('');
@@ -145,7 +151,7 @@ function extendAppWithAudioMethods(app) {
       // Initialize bulk actions state
       this.updateBulkActions();
       
-      console.warn('Could not verify audio file status');
+      console.warn('وضعیت فایل‌های صوتی قابل بررسی نبود');
     }
   };
 
@@ -156,7 +162,7 @@ function extendAppWithAudioMethods(app) {
         await this.stopAudio();
       }
 
-      this.setStatus('playing', 'Playing Audio');
+      this.setStatus('playing', 'در حال پخش');
       this.showNotification(`Playing: ${filename}`, 'info');
       
       // Update UI to show which audio is playing
@@ -172,8 +178,8 @@ function extendAppWithAudioMethods(app) {
           // Wait for audio to complete or be stopped
           await this.waitForAudioCompletion(filename);
         } catch (html5Error) {
-          console.warn('HTML5 audio failed, falling back to main process:', html5Error.message);
-          this.showNotification(`HTML5 audio failed, using system player...`, 'warning');
+          console.warn('پخش داخلی ناموفق بود؛ استفاده از پخش‌کننده سامانه:', html5Error.message);
+          this.showNotification(`پخش داخلی ناموفق بود؛ از پخش‌کننده سامانه استفاده می‌شود…`, 'warning');
           
           // Fallback to main process audio player
           result = await window.electronAPI.testAudio(filename);
@@ -184,7 +190,7 @@ function extendAppWithAudioMethods(app) {
       }
       
       // Reset status when done
-      this.setStatus('ready', 'Ready');
+      this.setStatus('ready', 'آماده');
       this.updateAudioPlayingState(filename, false);
       
       if (result && result.success) {
@@ -192,7 +198,7 @@ function extendAppWithAudioMethods(app) {
       }
       
     } catch (error) {
-      this.setStatus('error', 'Audio Error');
+      this.setStatus('error', 'خطای صوتی');
       this.updateAudioPlayingState(filename, false);
       
       let errorMessage = `Failed to play: ${filename}`;
@@ -244,7 +250,7 @@ function extendAppWithAudioMethods(app) {
         console.warn('Main process audio stop failed:', error.message);
       }
       
-      this.setStatus('ready', 'Ready');
+      this.setStatus('ready', 'آماده');
       
       // Reset all audio UI states
       this.updateAudioPlayingState(null, false);
@@ -252,11 +258,11 @@ function extendAppWithAudioMethods(app) {
       if (stopped) {
         this.showNotification('Audio stopped', 'info');
       } else {
-        this.showNotification('No audio was playing', 'info');
+        this.showNotification('هیچ صدایی در حال پخش نبود', 'info');
       }
     } catch (error) {
       console.error('Failed to stop audio:', error);
-      this.showNotification('Failed to stop audio', 'error');
+      this.showNotification('توقف صدا ناموفق بود', 'error');
     }
   };
 
@@ -322,7 +328,7 @@ function extendAppWithAudioMethods(app) {
   app.showAudioDetails = function(audioId) {
     const audioFile = this.data?.audioFiles?.find(af => af.id === audioId);
     if (!audioFile) {
-      this.showNotification('Audio file not found', 'error');
+      this.showNotification('فایل صوتی یافت نشد', 'error');
       return;
     }
 
@@ -378,12 +384,12 @@ function extendAppWithAudioMethods(app) {
 
     const buttons = [
       {
-        text: 'Close',
+        text: 'بستن',
         class: 'btn btn-secondary',
         onclick: () => this.closeModal()
       },
       {
-        text: 'Delete Audio',
+        text: 'حذف فایل',
         class: 'btn btn-danger',
         onclick: () => {
           this.closeModal();
@@ -416,18 +422,18 @@ function extendAppWithAudioMethods(app) {
 
   app.testSystemAudio = async function() {
     try {
-      this.showNotification('Testing system audio (you should hear a beep)...', 'info');
+      this.showNotification('در حال آزمون صدا (باید بوقی بشنوید)…', 'info');
       
       const result = await window.electronAPI.testSystemAudio();
       
       if (result.success) {
-        this.showNotification('System audio test completed! Did you hear a beep?', 'success');
+        this.showNotification('آزمون صدا انجام شد. آیا بوقی شنیدید؟', 'success');
       } else {
-        this.showNotification('System audio test failed - no beep heard', 'error');
+        this.showNotification('آزمون صدا ناموفق بود؛ بوقی شنیده نشد', 'error');
       }
       
     } catch (error) {
-      this.showNotification('System audio test failed - check your audio drivers and speakers', 'error');
+      this.showNotification('آزمون صدا ناموفق بود؛ درایورها و بلندگوها را بررسی کنید', 'error');
     }
   };
 
@@ -472,7 +478,7 @@ function extendAppWithAudioMethods(app) {
 
     const buttons = [
       {
-        text: 'Cancel',
+        text: 'انصراف',
         class: 'btn btn-secondary',
         onclick: () => this.closeModal()
       },
@@ -483,7 +489,7 @@ function extendAppWithAudioMethods(app) {
       }
     ];
 
-    this.showModal('Upload Audio Files', modalContent, buttons);
+    this.showModal('بارگذاری فایل صوتی', modalContent, buttons);
     
     setTimeout(() => this.setupUploadModal(), 100);
   };
@@ -534,11 +540,11 @@ function extendAppWithAudioMethods(app) {
       const extension = '.' + file.name.split('.').pop().toLowerCase();
       
       if (!validExtensions.includes(extension)) {
-        invalidFiles.push({ file, reason: 'Invalid format' });
+        invalidFiles.push({ file, reason: 'قالب نامعتبر' });
       } else if (file.size > maxSize) {
-        invalidFiles.push({ file, reason: 'Too large (max 50MB)' });
+        invalidFiles.push({ file, reason: 'حجم بیش از حد (حداکثر ۵۰ مگابایت)' });
       } else if (file.size === 0) {
-        invalidFiles.push({ file, reason: 'Empty file' });
+        invalidFiles.push({ file, reason: 'فایل خالی' });
       } else {
         validFiles.push(file);
       }
@@ -556,7 +562,7 @@ function extendAppWithAudioMethods(app) {
     }
 
     if (validFiles.length === 0) {
-      this.showNotification('No valid files selected', 'error');
+      this.showNotification('فایل معتبری انتخاب نشده است', 'error');
       return;
     }
 
@@ -601,7 +607,7 @@ function extendAppWithAudioMethods(app) {
         successCount > errorCount ? 'success' : 'warning'
       );
     } else {
-      this.showNotification('All uploads failed', 'error');
+      this.showNotification('همه بارگذاری‌ها ناموفق بود', 'error');
     }
   };
 
@@ -660,381 +666,21 @@ function extendAppWithAudioMethods(app) {
     });
   };
 
+  /**
+   * Formatting helpers - thin delegates to the shared utilities so the
+   * formatting rules are defined exactly once.
+   */
   app.formatFileSize = function(bytes) {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return formatFileSize(bytes);
   };
 
   app.getFileTypeDisplay = function(filename) {
-    const ext = filename.split('.').pop().toUpperCase();
-    const typeMap = {
-      'MP3': 'MP3 Audio',
-      'WAV': 'WAV Audio',
-      'M4A': 'M4A Audio',
-      'OGG': 'OGG Audio',
-      'AAC': 'AAC Audio'
-    };
-    return typeMap[ext] || ext;
+    return getFileTypeDisplay(filename);
   };
 
   app.formatUploadDate = function(dateString) {
-    if (!dateString) return 'Unknown';
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return formatUploadDate(dateString);
   };
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const audioStyles = document.createElement('style');
-  audioStyles.textContent = `
-    .audio-file {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      margin-bottom: 1.5rem;
-      border: 2px solid transparent;
-      transition: all 0.3s ease;
-    }
-    
-    .audio-file:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-    }
-    
-    .audio-file.available { border-color: #28a745; }
-    .audio-file.missing { border-color: #dc3545; background: #fff5f5; }
-    .audio-file.unknown { border-color: #ffc107; }
-    
-    /* NEW: Playing state styles */
-    .audio-file.playing { 
-      border-color: #007bff; 
-      background: #f0f8ff;
-      box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3);
-    }
-    
-    .audio-header {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    
-    .audio-info { 
-      flex: 1; 
-      min-width: 0;
-    }
-    
-    .audio-name {
-      font-weight: 600;
-      font-size: 1.1rem;
-      color: #2c3e50;
-      margin-bottom: 0.25rem;
-    }
-    
-    .audio-filename {
-      color: #6c757d;
-      font-size: 0.9rem;
-      font-family: 'Courier New', monospace;
-      margin-bottom: 0.5rem;
-      background: #f8f9fa;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      display: inline-block;
-    }
-    
-    .audio-metadata {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    
-    .audio-size, .audio-type, .audio-uploaded {
-      color: #6c757d;
-      font-size: 0.8rem;
-    }
-    
-    .audio-controls {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      padding-top: 0.5rem;
-      border-top: 1px solid #e9ecef;
-    }
-    
-    .audio-controls .btn { 
-      min-width: 80px;
-      padding: 0.6rem 1rem;
-      font-size: 0.85rem;
-      border-radius: 6px;
-      flex-shrink: 0;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-    
-    /* NEW: Enhanced button states */
-    .audio-controls .btn.playing {
-      background: #dc3545 !important;
-      animation: pulse 1.5s infinite;
-    }
-    
-    .audio-controls .stop-btn.active {
-      background: #ffc107 !important;
-      color: #212529 !important;
-      font-weight: bold;
-    }
-    
-    .audio-status {
-      display: none;
-    }
-    
-    .audio-warning {
-      display: none;
-    }
-    
-    .upload-container { max-width: 600px; }
-    
-    .upload-header {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-    
-    .drag-area {
-      border: 3px dashed #dee2e6;
-      border-radius: 12px;
-      padding: 3rem 2rem;
-      text-align: center;
-      cursor: pointer;
-      margin-bottom: 1.5rem;
-      transition: all 0.3s ease;
-      background: #f8f9fa;
-    }
-    
-    .drag-area:hover, .drag-area.drag-over {
-      border-color: #667eea;
-      background: #f0f3ff;
-      transform: scale(1.02);
-    }
-    
-    .drag-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      color: #6c757d;
-    }
-    
-    .drag-text {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 0.5rem;
-    }
-    
-    .drag-subtext {
-      color: #6c757d;
-      font-size: 0.9rem;
-    }
-    
-    .upload-info {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 1.5rem;
-    }
-    
-    .supported-formats { margin-bottom: 1rem; }
-    
-    .format-list {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-top: 0.5rem;
-    }
-    
-    .format-tag {
-      background: #667eea;
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-    
-    .upload-limits ul {
-      margin: 0.5rem 0 0 1rem;
-      padding: 0;
-    }
-    
-    .upload-limits li {
-      margin-bottom: 0.25rem;
-      font-size: 0.9rem;
-      color: #6c757d;
-    }
-    
-    .audio-details { max-width: 600px; }
-    
-    .detail-section {
-      margin-bottom: 2rem;
-      padding: 1.5rem;
-      background: #f8f9fa;
-      border-radius: 8px;
-      border-left: 4px solid #667eea;
-    }
-    
-    .detail-section h4 {
-      margin-bottom: 1rem;
-      color: #495057;
-    }
-    
-    .detail-grid { display: grid; gap: 0.75rem; }
-    
-    .detail-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.5rem;
-      background: white;
-      border-radius: 4px;
-    }
-    
-    .detail-item strong { color: #495057; }
-    
-    .monospace {
-      font-family: 'Courier New', monospace;
-      background: #e9ecef;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-    }
-    
-    .detail-controls {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-    }
-    
-    .usage-info {
-      background: white;
-      padding: 1rem;
-      border-radius: 6px;
-      border: 1px solid #dee2e6;
-    }
-    
-    .usage-info p {
-      margin-bottom: 0.5rem;
-      line-height: 1.5;
-    }
-    
-    .usage-info p:last-child { margin-bottom: 0; }
-    
-    /* NEW: Pulse animation for playing state */
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.7; }
-      100% { opacity: 1; }
-    }
-    
-    @media (max-width: 1024px) {
-      .audio-controls {
-        gap: 0.5rem;
-      }
-      
-      .audio-controls .btn {
-        padding: 0.5rem 0.8rem;
-        font-size: 0.8rem;
-        min-width: 75px;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      .audio-file { 
-        padding: 1rem; 
-        margin-bottom: 1rem;
-      }
-      
-      .audio-controls { 
-        gap: 0.5rem;
-        flex-wrap: wrap;
-      }
-      
-      .audio-controls .btn {
-        min-width: 70px;
-        padding: 0.5rem 0.7rem;
-        font-size: 0.75rem;
-      }
-      
-      .audio-metadata { 
-        flex-direction: column; 
-        gap: 0.25rem; 
-        font-size: 0.75rem;
-      }
-      
-      .detail-item { 
-        flex-direction: column; 
-        align-items: flex-start; 
-        gap: 0.25rem; 
-      }
-      
-      .detail-controls { 
-        flex-direction: column; 
-      }
-      
-      .format-list { 
-        justify-content: center; 
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .audio-controls .btn {
-        min-width: 65px;
-        padding: 0.45rem 0.6rem;
-        font-size: 0.7rem;
-      }
-      
-      .audio-controls {
-        gap: 0.4rem;
-      }
-    }
-
-    /* Bulk selection styles */
-    .audio-checkbox {
-      margin-right: 12px;
-      display: flex;
-      align-items: center;
-    }
-
-    .audio-checkbox input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-
-    .audio-file.selected {
-      background-color: #e3f2fd;
-      border-color: #2196f3;
-    }
-
-    .bulk-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-right: 16px;
-      padding: 8px;
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
-    }
-
-    .selected-count {
-      font-size: 0.875rem;
-      color: #6c757d;
-      margin-left: 8px;
-    }
-  `;
-  document.head.appendChild(audioStyles);
 
   // Bulk selection functionality
   app.updateBulkActions = function() {
@@ -1042,22 +688,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkedBoxes = document.querySelectorAll('.audio-select:checked');
     const bulkActions = document.getElementById('bulkActions');
     const selectedCount = document.getElementById('selectedCount');
-    
-    
-    if (checkboxes.length > 0 && bulkActions && selectedCount) {
-      bulkActions.style.display = checkedBoxes.length > 0 ? 'flex' : 'none';
-      selectedCount.textContent = `${checkedBoxes.length} selected`;
-      
-      // Update visual selection state
-      checkboxes.forEach(checkbox => {
-        const audioFile = checkbox.closest('.audio-file');
-        if (checkbox.checked) {
-          audioFile.classList.add('selected');
-        } else {
-          audioFile.classList.remove('selected');
-        }
-      });
-    }
+
+    if (!bulkActions || !selectedCount) return;
+
+    const hasSelection = checkedBoxes.length > 0;
+
+    // Use the `hidden` attribute rather than inline styles so the toolbar
+    // cannot end up stuck on screen or stuck hidden.
+    bulkActions.hidden = !hasSelection;
+    selectedCount.textContent = `${checkedBoxes.length} selected`;
+
+    const deleteBtn = document.getElementById('bulkDeleteBtn');
+    if (deleteBtn) deleteBtn.disabled = !hasSelection;
+
+    // Reflect selection on the card
+    checkboxes.forEach(checkbox => {
+      checkbox.closest('.audio-file')?.classList.toggle('selected', checkbox.checked);
+    });
   };
 
   app.selectAllAudio = function() {
@@ -1079,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
   app.bulkDeleteAudio = async function() {
     const checkedBoxes = document.querySelectorAll('.audio-select:checked');
     if (checkedBoxes.length === 0) {
-      this.showNotification('No audio files selected', 'warning');
+      this.showNotification('هیچ فایل صوتی انتخاب نشده است', 'warning');
       return;
     }
 
@@ -1095,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (confirmed) {
       try {
-        this.showNotification('Deleting audio files...', 'info');
+        this.showNotification('در حال حذف فایل‌های صوتی…', 'info');
 
         const result = await window.electronAPI.bulkDeleteAudioFiles(selectedIds);
         
@@ -1113,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
           await this.renderAudioFiles();
           this.updateBulkActions();
         } else {
-          throw new Error(result.message || 'Bulk delete failed');
+          throw new Error(result.message || 'حذف گروهی ناموفق بود');
         }
       } catch (error) {
         console.error('Bulk delete failed:', error);
@@ -1145,4 +792,4 @@ document.addEventListener('DOMContentLoaded', () => {
       newBulkDeleteBtn.addEventListener('click', () => this.bulkDeleteAudio());
     }
   };
-});
+}

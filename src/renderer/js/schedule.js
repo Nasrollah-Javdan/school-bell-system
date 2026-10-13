@@ -4,17 +4,7 @@
  */
 
 // Extend the main app with schedule methods
-if (typeof window !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      if (window.app) {
-        extendAppWithScheduleMethods(window.app);
-      }
-    }, 100);
-  });
-}
-
-function extendAppWithScheduleMethods(app) {
+export function extendAppWithScheduleMethods(app) {
 
   /**
    * Show add event modal
@@ -31,7 +21,7 @@ function extendAppWithScheduleMethods(app) {
             <!-- Event Name -->
             <div class="form-group">
               <label for="eventName">Event Name *</label>
-              <input type="text" id="eventName" placeholder="e.g., Morning Bell" required>
+              <input type="text" id="eventName" placeholder="مثلاً: زنگ شروع کلاس" required>
             </div>
             
             <!-- Time Picker -->
@@ -78,12 +68,12 @@ function extendAppWithScheduleMethods(app) {
       `;
 
       const buttons = [
-        { text: 'Cancel', class: 'btn btn-secondary', onclick: () => this.closeModal() },
-        { text: 'Test Event', class: 'btn btn-warning', onclick: () => this.testEvent() },
-        { text: 'Save Event', class: 'btn btn-primary', onclick: () => this.saveEvent() }
+        { text: 'انصراف', class: 'btn btn-secondary', onclick: () => this.closeModal() },
+        { text: 'آزمون رویداد', class: 'btn btn-warning', onclick: () => this.testEvent() },
+        { text: 'ذخیره رویداد', class: 'btn btn-primary', onclick: () => this.saveEvent() }
       ];
 
-      this.showModal('Add Schedule Event', modalContent, buttons);
+      this.showModal('افزودن رویداد زمان‌بندی', modalContent, buttons);
       
       // Initialize form
       setTimeout(() => this.initEventForm(), 100);
@@ -163,19 +153,19 @@ function extendAppWithScheduleMethods(app) {
     }
     
     const html = this.audioSequence.map((item, index) => `
-      <div class="audio-item" draggable="true" data-index="${index}">
-        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
-        <div class="audio-info">
-          <span class="audio-name">${item.audioFile}</span>
-          <span class="audio-repeat">×${item.repeat}</span>
+      <div class="sequence-item" draggable="true" data-index="${index}">
+        <div class="drag-handle" title="برای تغییر ترتیب بکشید" aria-hidden="true">⋮⋮</div>
+        <div class="sequence-item__info">
+          <span class="sequence-item__name" title="${this.escapeHtml(item.audioFile)}">${this.escapeHtml(item.audioFile)}</span>
+          <span class="sequence-item__repeat">Plays ${item.repeat}×</span>
         </div>
-        <div class="audio-controls">
-          <button type="button" onclick="app.moveAudio(${index}, -1)" title="Move Up">↑</button>
-          <button type="button" onclick="app.moveAudio(${index}, 1)" title="Move Down">↓</button>
-          <button type="button" onclick="app.changeRepeat(${index}, -1)" title="Decrease">−</button>
-          <button type="button" onclick="app.changeRepeat(${index}, 1)" title="Increase">+</button>
-          <button type="button" onclick="app.previewAudio('${item.audioFile}')" title="Preview">▶</button>
-          <button type="button" onclick="app.removeAudio(${index})" title="Remove">×</button>
+        <div class="sequence-item__controls">
+          <button type="button" onclick="app.moveAudio(${index}, -1)" title="انتقال به بالا" aria-label="Move ${this.escapeHtml(item.audioFile)} up">↑</button>
+          <button type="button" onclick="app.moveAudio(${index}, 1)" title="انتقال به پایین" aria-label="Move ${this.escapeHtml(item.audioFile)} down">↓</button>
+          <button type="button" onclick="app.changeRepeat(${index}, -1)" title="یک بار کمتر پخش شود" aria-label="کاهش تعداد تکرار">−</button>
+          <button type="button" onclick="app.changeRepeat(${index}, 1)" title="یک بار بیشتر پخش شود" aria-label="افزایش تعداد تکرار">+</button>
+          <button type="button" onclick="app.previewAudio('${item.audioFile}')" title="پیش‌نمایش" aria-label="Preview ${this.escapeHtml(item.audioFile)}">▶</button>
+          <button type="button" data-action="remove" onclick="app.removeAudio(${index})" title="حذف" aria-label="Remove ${this.escapeHtml(item.audioFile)}">×</button>
         </div>
       </div>
     `).join('');
@@ -198,7 +188,7 @@ function extendAppWithScheduleMethods(app) {
     this.audioSequence[newIndex] = temp;
     
     this.updateAudioDisplay();
-    this.showNotification('Audio order updated', 'info');
+    this.showNotification('ترتیب پخش صدا به‌روزرسانی شد', 'info');
   };
 
   /**
@@ -206,31 +196,36 @@ function extendAppWithScheduleMethods(app) {
    */
   app.setupAudioDragAndDrop = function() {
     const container = document.getElementById('selectedAudio');
+    if (!container || container.dataset.dragBound === 'true') return;
+
+    // Bind once - the list is re-rendered in place, so rebinding on every
+    // update would stack duplicate listeners and fire reorders many times.
+    container.dataset.dragBound = 'true';
     let draggedIndex = null;
     
     container.addEventListener('dragstart', (e) => {
-      if (e.target.classList.contains('audio-item')) {
+      if (e.target.classList.contains('sequence-item')) {
         draggedIndex = parseInt(e.target.dataset.index);
         e.target.style.opacity = '0.5';
         e.dataTransfer.effectAllowed = 'move';
       }
     });
-    
+
     container.addEventListener('dragend', (e) => {
-      if (e.target.classList.contains('audio-item')) {
+      if (e.target.classList.contains('sequence-item')) {
         e.target.style.opacity = '1';
       }
     });
-    
+
     container.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
     });
-    
+
     container.addEventListener('drop', (e) => {
       e.preventDefault();
-      
-      const dropTarget = e.target.closest('.audio-item');
+
+      const dropTarget = e.target.closest('.sequence-item');
       if (dropTarget && draggedIndex !== null) {
         const dropIndex = parseInt(dropTarget.dataset.index);
         
@@ -240,7 +235,7 @@ function extendAppWithScheduleMethods(app) {
           this.audioSequence.splice(dropIndex, 0, draggedItem);
           
           this.updateAudioDisplay();
-          this.showNotification('Audio order updated', 'success');
+          this.showNotification('ترتیب پخش صدا به‌روزرسانی شد', 'success');
         }
       }
       
@@ -266,7 +261,7 @@ function extendAppWithScheduleMethods(app) {
     if (this.audioSequence[index]) {
       this.audioSequence.splice(index, 1);
       this.updateAudioDisplay();
-      this.showNotification('Audio file removed', 'info');
+      this.showNotification('فایل صوتی حذف شد', 'info');
     }
   };
 
@@ -304,13 +299,13 @@ function extendAppWithScheduleMethods(app) {
    */
   app.validateEvent = function(data) {
     if (!data.name) {
-      this.showNotification('Event name is required', 'error');
+      this.showNotification('وارد کردن نام رویداد الزامی است', 'error');
       document.getElementById('eventName').focus();
       return false;
     }
     
     if (!data.time) {
-      this.showNotification('Event time is required', 'error');
+      this.showNotification('تعیین ساعت رویداد الزامی است', 'error');
       document.getElementById('eventTime').focus();
       return false;
     }
@@ -332,12 +327,12 @@ function extendAppWithScheduleMethods(app) {
         const event = daySchedule.find(e => e.id === eventId);
         
         if (!event) {
-          this.showNotification('Event not found', 'error');
+          this.showNotification('رویداد یافت نشد', 'error');
           return;
         }
 
         if (!event.audioSequence || event.audioSequence.length === 0) {
-          this.showNotification('This event has no audio sequence to test', 'warning');
+          this.showNotification('این رویداد ترتیب صوتی برای آزمون ندارد', 'warning');
           return;
         }
 
@@ -350,25 +345,25 @@ function extendAppWithScheduleMethods(app) {
         if (!this.validateEvent(data)) return;
         
         if (data.audioSequence.length === 0) {
-          this.showNotification('Add at least one audio file to test', 'warning');
+          this.showNotification('برای آزمون، دست‌کم یک فایل صوتی بیفزایید', 'warning');
           return;
         }
         
         eventData = data;
-        context = 'Testing event...';
+        context = 'در حال آزمون رویداد…';
       }
       
       this.showNotification(context, 'info');
-      this.setStatus('playing', 'Testing Event');
+      this.setStatus('playing', 'در حال آزمون رویداد');
       
       await window.electronAPI.testEvent(this.currentDay, eventData);
       
-      this.setStatus('ready', 'Ready');
-      this.showNotification('Test completed!', 'success');
+      this.setStatus('ready', 'آماده');
+      this.showNotification('آزمون انجام شد!', 'success');
       
     } catch (error) {
-      console.error('Test failed:', error);
-      this.setStatus('error', 'Test Failed');
+      console.error('آزمون ناموفق بود:', error);
+      this.setStatus('error', 'آزمون ناموفق');
       this.showNotification(`Test failed: ${error.message}`, 'error');
     }
   };
@@ -386,10 +381,10 @@ function extendAppWithScheduleMethods(app) {
       
       if (this.editingEventId) {
         await window.electronAPI.updateScheduleEvent(this.currentDay, this.editingEventId, data);
-        this.showNotification('Event updated successfully!', 'success');
+        this.showNotification('رویداد با موفقیت به‌روزرسانی شد!', 'success');
       } else {
         await window.electronAPI.addScheduleEvent(this.currentDay, data);
-        this.showNotification('Event saved successfully!', 'success');
+        this.showNotification('رویداد با موفقیت ذخیره شد!', 'success');
       }
       
       this.closeModal();
@@ -400,7 +395,7 @@ function extendAppWithScheduleMethods(app) {
       this.updateSchedule();
       
     } catch (error) {
-      console.error('Save failed:', error);
+      console.error('ذخیره ناموفق بود:', error);
       this.showLoading(false);
       this.showNotification(`Save failed: ${error.message}`, 'error');
     }
@@ -415,7 +410,7 @@ function extendAppWithScheduleMethods(app) {
       const event = daySchedule.find(e => e.id === eventId);
       
       if (!event) {
-        this.showNotification('Event not found', 'error');
+        this.showNotification('رویداد یافت نشد', 'error');
         return;
       }
       
@@ -424,7 +419,7 @@ function extendAppWithScheduleMethods(app) {
       
       // Populate with event data
       setTimeout(() => {
-        document.getElementById('modalTitle').textContent = 'Edit Event';
+        document.getElementById('modalTitle').textContent = 'ویرایش رویداد';
         const eventNameInput = document.getElementById('eventName');
         eventNameInput.value = event.name;
         document.getElementById('eventTime').value = event.time.substring(0, 5); // HH:MM:SS to HH:MM
@@ -441,7 +436,7 @@ function extendAppWithScheduleMethods(app) {
         
         // Update button
         const saveBtn = document.querySelector('.btn-primary');
-        saveBtn.textContent = 'Update Event';
+        saveBtn.textContent = 'به‌روزرسانی رویداد';
         
         this.editingEventId = eventId;
       }, 200);
@@ -460,7 +455,7 @@ function extendAppWithScheduleMethods(app) {
       const templates = await window.electronAPI.getTemplates();
       
       if (templates.length === 0) {
-        this.showNotification('No templates available', 'warning');
+        this.showNotification('الگویی در دسترس نیست', 'warning');
         return;
       }
       
@@ -487,15 +482,15 @@ function extendAppWithScheduleMethods(app) {
       `;
       
       const buttons = [
-        { text: 'Cancel', class: 'btn btn-secondary', onclick: () => this.closeModal() },
-        { text: 'Apply', class: 'btn btn-warning', onclick: () => this.applyTemplate() }
+        { text: 'انصراف', class: 'btn btn-secondary', onclick: () => this.closeModal() },
+        { text: 'اعمال', class: 'btn btn-warning', onclick: () => this.applyTemplate() }
       ];
       
-      this.showModal('Apply Template', content, buttons);
+      this.showModal('اعمال الگو', content, buttons);
       
     } catch (error) {
       console.error('Template modal failed:', error);
-      this.showNotification('Failed to load templates', 'error');
+      this.showNotification('بارگذاری الگوها ناموفق بود', 'error');
     }
   };
 
@@ -507,7 +502,7 @@ function extendAppWithScheduleMethods(app) {
       const selected = document.querySelector('input[name="template"]:checked');
       
       if (!selected) {
-        this.showNotification('Please select a template', 'warning');
+        this.showNotification('لطفاً یک الگو انتخاب کنید', 'warning');
         return;
       }
       
@@ -515,7 +510,7 @@ function extendAppWithScheduleMethods(app) {
       const template = templates.find(t => t.id === selected.value);
       
       if (!template) {
-        this.showNotification('Template not found', 'error');
+        this.showNotification('الگو یافت نشد', 'error');
         return;
       }
       
@@ -551,260 +546,8 @@ function extendAppWithScheduleMethods(app) {
     } catch (error) {
       console.error('Apply template failed:', error);
       this.showLoading(false);
-      this.showNotification('Failed to apply template', 'error');
+      this.showNotification('اعمال الگو ناموفق بود', 'error');
     }
   };
 
 }
-
-// Clean, minimal CSS
-document.addEventListener('DOMContentLoaded', () => {
-  const style = document.createElement('style');
-  style.textContent = `
-    .event-form-container {
-      max-width: 500px;
-      margin: 0 auto;
-    }
-    
-    .event-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-    
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    
-    .form-group label {
-      font-weight: 600;
-      color: #374151;
-    }
-    
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      padding: 0.75rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      transition: border-color 0.2s;
-    }
-    
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #3b82f6;
-    }
-    
-    .audio-section {
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 1rem;
-      background: #f9fafb;
-    }
-    
-    .audio-selector {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    
-    .audio-selector select {
-      flex: 1;
-      margin: 0;
-    }
-    
-    .audio-selector button {
-      padding: 0.75rem 1rem;
-      background: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    
-    .audio-selector button:disabled {
-      background: #9ca3af;
-      cursor: not-allowed;
-    }
-    
-    .audio-selector button:not(:disabled):hover {
-      background: #2563eb;
-    }
-    
-    .selected-audio {
-      min-height: 60px;
-      border: 2px dashed #d1d5db;
-      border-radius: 6px;
-      padding: 0.75rem;
-    }
-    
-    .no-audio {
-      text-align: center;
-      color: #6b7280;
-      font-style: italic;
-      padding: 1rem;
-    }
-    
-    .audio-item {
-      display: flex;
-      align-items: center;
-      padding: 0.75rem;
-      background: white;
-      border-radius: 6px;
-      margin-bottom: 0.5rem;
-      border: 1px solid #e5e7eb;
-      cursor: move;
-      transition: all 0.2s;
-    }
-    
-    .audio-item:hover {
-      border-color: #3b82f6;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .audio-item:last-child {
-      margin-bottom: 0;
-    }
-    
-    .drag-handle {
-      color: #9ca3af;
-      font-weight: bold;
-      margin-right: 0.75rem;
-      cursor: grab;
-      user-select: none;
-      font-size: 1.2em;
-    }
-    
-    .drag-handle:active {
-      cursor: grabbing;
-    }
-    
-    .audio-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      flex: 1;
-    }
-    
-    .audio-name {
-      font-weight: 500;
-      color: #374151;
-    }
-    
-    .audio-repeat {
-      font-size: 0.8rem;
-      color: #6b7280;
-    }
-    
-    .audio-controls {
-      display: flex;
-      gap: 0.25rem;
-    }
-    
-    .audio-controls button {
-      width: 32px;
-      height: 32px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: all 0.2s;
-    }
-    
-    .audio-controls button:nth-child(1) { background: #8b5cf6; color: white; } /* Move Up */
-    .audio-controls button:nth-child(2) { background: #8b5cf6; color: white; } /* Move Down */
-    .audio-controls button:nth-child(3) { background: #ef4444; color: white; } /* Decrease */
-    .audio-controls button:nth-child(4) { background: #10b981; color: white; } /* Increase */
-    .audio-controls button:nth-child(5) { background: #3b82f6; color: white; } /* Preview */
-    .audio-controls button:nth-child(6) { background: #6b7280; color: white; } /* Remove */
-    
-    .audio-controls button:hover {
-      transform: scale(1.1);
-    }
-    
-    .checkbox-label {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-    }
-    
-    .checkbox-label input {
-      width: auto;
-      margin: 0;
-    }
-    
-    .template-selector {
-      max-width: 400px;
-    }
-    
-    .warning {
-      background: #fef3c7;
-      border: 1px solid #f59e0b;
-      color: #92400e;
-      padding: 0.75rem;
-      border-radius: 6px;
-      margin: 1rem 0;
-      text-align: center;
-    }
-    
-    .templates-list {
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-    }
-    
-    .template-option {
-      padding: 1rem;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .template-option:last-child {
-      border-bottom: none;
-    }
-    
-    .template-option label {
-      display: flex !important;
-      align-items: center;
-      gap: 0.75rem;
-      cursor: pointer;
-      margin: 0;
-    }
-    
-    .template-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    
-    .template-info span {
-      font-size: 0.8rem;
-      color: #6b7280;
-    }
-    
-    @media (max-width: 768px) {
-      .audio-selector {
-        flex-direction: column;
-      }
-      
-      .audio-item {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
-      }
-      
-      .audio-controls {
-        justify-content: center;
-      }
-    }
-  `;
-  document.head.appendChild(style);
-});
