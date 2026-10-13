@@ -47,18 +47,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getNextEvents: (limit) => ipcRenderer.invoke('scheduler-get-next-events', limit),
   getTodayEvents: () => ipcRenderer.invoke('scheduler-get-today-events'),
   
-  // Authentication operations
-  isSetupComplete: () => ipcRenderer.invoke('auth-is-setup-complete'),
-  createAdmin: (username, password) => ipcRenderer.invoke('auth-create-admin', username, password),
-  login: (username, password) => ipcRenderer.invoke('auth-login', username, password),
-  logout: () => ipcRenderer.invoke('auth-logout'),
-  isLoggedIn: () => ipcRenderer.invoke('auth-is-logged-in'),
-  getSession: () => ipcRenderer.invoke('auth-get-session'),
-  updateActivity: () => ipcRenderer.invoke('auth-update-activity'),
-  getAdminInfo: () => ipcRenderer.invoke('auth-get-admin-info'),
-  changePassword: (currentPassword, newPassword) => ipcRenderer.invoke('auth-change-password', currentPassword, newPassword),
-  resetSetup: () => ipcRenderer.invoke('auth-reset-setup'),
-  
+  // Auth and password features were removed; the app opens straight into the UI.
+
   readFileAsBuffer: async (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -95,18 +85,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeScheduledAudioListener: () => {
     ipcRenderer.removeAllListeners('scheduled-audio');
   },
-  
-  // Session management
-  onSessionExpired: (callback) => {
-    ipcRenderer.on('session-expired', callback);
-  },
-  
-  removeSessionExpiredListener: () => {
-    ipcRenderer.removeAllListeners('session-expired');
-  },
-  
   platform: process.platform,
+  appVersion: process.env.APP_VERSION || '',
   isDevelopment: () => ipcRenderer.invoke('is-development-mode'),
+
+  // ---- Auto-update ----
+  updater: {
+    getVersion: () => ipcRenderer.invoke('updater-get-version'),
+    checkForUpdates: () => ipcRenderer.invoke('updater-check-for-updates'),
+    downloadUpdate: () => ipcRenderer.invoke('updater-download-update'),
+    installUpdate: () => ipcRenderer.invoke('updater-install-update'),
+    createBackup: () => ipcRenderer.invoke('updater-create-backup'),
+    listBackups: () => ipcRenderer.invoke('updater-list-backups'),
+    openDataFolder: () => ipcRenderer.invoke('updater-open-data-folder'),
+    onStatus: (callback) => {
+      const listener = (_event, payload) => callback(payload);
+      ipcRenderer.on('update-status', listener);
+      return () => ipcRenderer.removeListener('update-status', listener);
+    }
+  },
+
   restartApp: () => ipcRenderer.invoke('updater-restart-app'),
   
   handleError: (error, context = 'Unknown') => {
@@ -119,38 +117,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   }
 });
 
-// Note: Scheduled audio listener is set up in DOMContentLoaded with delay
-
-window.addEventListener('DOMContentLoaded', () => {
-  if (window.electronAPI && window.electronAPI.onAudioNotification) {
-    window.electronAPI.onAudioNotification((event, notification) => {
-      if (window.app && window.app.showNotification) {
-        window.app.showNotification(notification.message, notification.type);
-      }
-    });
-  }
-
-  if (window.electronAPI && window.electronAPI.onSessionExpired) {
-    window.electronAPI.onSessionExpired((event) => {
-      if (window.app && window.app.handleSessionExpired) {
-        window.app.handleSessionExpired();
-      }
-    });
-  }
-
-  // Note: Scheduled audio listener is now set up in app.js after full initialization
-
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-  event.preventDefault();
-  if (window.app && window.app.showNotification) {
-    window.app.showNotification('An unexpected error occurred', 'error');
-  }
-});
-
-window.addEventListener('error', (event) => {
-  if (window.app && window.app.showNotification) {
-    window.app.showNotification('An unexpected error occurred', 'error');
-  }
-});
+// Note: the renderer entry point (src/renderer/js/main.js) subscribes to
+// `audio-notification` and `scheduled-audio` during bootstrap.
+// Listening here as well would deliver every event twice.

@@ -3,19 +3,19 @@
   "version": "1.0.2",
   "description": "Automated school bell scheduling system with audio playback and authentication",
   "main": "src/main/main.js",
-  "homepage": "https://github.com/AtizaD/school-bell-system",
+  "homepage": "https://github.com/Nasrollah-Javdan/school-bell-system",
   "author": {
-    "name": "AtizaD",
+    "name": "Nasrollah-Javdan",
     "email": "veratechgh1@gmail.com",
-    "url": "https://github.com/AtizaD"
+    "url": "https://github.com/Nasrollah-Javdan"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AtizaD/school-bell-system.git"
+    "url": "https://github.com/Nasrollah-Javdan/school-bell-system.git"
   },
   "bugs": {
-    "url": "https://github.com/AtizaD/school-bell-system/issues"
+    "url": "https://github.com/Nasrollah-Javdan/school-bell-system/issues"
   },
   "keywords": [
     "school",
@@ -28,37 +28,41 @@
     "desktop-app"
   ],
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev --disable-gpu-sandbox --no-sandbox",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux",
+    "start": "npm run build:renderer && electron .",
+    "dev": "concurrently -k -n vite,electron -c cyan,magenta \"npm:dev:renderer\" \"npm:dev:electron\"",
+    "dev:renderer": "vite",
+    "dev:electron": "wait-on tcp:127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron . --dev --disable-gpu-sandbox --no-sandbox",
+    "build:renderer": "vite build",
+    "build": "npm run build:renderer && electron-builder --win",
+    "build:win": "npm run build:renderer && electron-builder --win",
+    "build:win:plain": "npm run build:renderer && electron-builder --win --config.win.signAndEditExecutable=false",
     "dist": "npm run build",
-    "pack": "electron-builder --dir",
+    "pack": "npm run build:renderer && electron-builder --dir",
     "postinstall": "electron-builder install-app-deps",
-    "release": "electron-builder --publish=always",
+    "release": "npm run build:renderer && electron-builder --publish=always",
     "release:patch": "node scripts/release.js patch",
-    "release:minor": "node scripts/release.js minor", 
+    "release:minor": "node scripts/release.js minor",
     "release:major": "node scripts/release.js major",
     "clean": "rimraf dist node_modules package-lock.json && npm install"
   },
   "dependencies": {
     "auto-launch": "^5.0.6",
-    "bcryptjs": "^3.0.2",
     "electron-updater": "^6.1.7",
-    "node-cron": "^4.1.1",
-    "node-machine-id": "^1.1.12"
+    "node-cron": "^4.1.1"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.8.2",
     "@electron-forge/maker-squirrel": "^7.8.2",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
     "electron": "^37.1.0",
     "electron-builder": "^26.0.12",
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "vite": "^6.0.7",
+    "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.atizad.school-bell-system",
+    "appId": "com.nasrollah.school-bell-system",
     "productName": "School Bell System",
     "copyright": "Copyright © 2025 AtizaD",
     "electronVersion": "37.1.0",
@@ -67,7 +71,9 @@
       "buildResources": "build"
     },
     "files": [
-      "src/**/*",
+      "src/main/**/*",
+      "src/renderer/dist/**/*",
+      "src/renderer/assets/icons/*",
       "package.json"
     ],
     "extraResources": [
@@ -95,37 +101,6 @@
       "icon": "src/renderer/assets/icons/icon.ico",
       "verifyUpdateCodeSignature": false
     },
-    "mac": {
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "src/renderer/assets/icons/icon.ico",
-      "category": "public.app-category.education"
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "src/renderer/assets/icons/icon.ico",
-      "category": "Education"
-    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -135,7 +110,7 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "AtizaD",
+      "owner": "Nasrollah-Javdan",
       "repo": "school-bell-system",
       "private": false,
       "releaseType": "release"

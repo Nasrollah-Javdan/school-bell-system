@@ -6,8 +6,15 @@ yarn-error.log*
 
 # Build outputs
 dist/
-build/
+build/*
 out/
+src/renderer/dist/
+.vite/
+
+# Icons under build/ are build inputs and must stay in the repo,
+# otherwise electron-builder fails on a missing extraResources source.
+!build/tray-icon.png
+!build/tray-icon@2x.png
 
 # User data files
 auth-data.enc
