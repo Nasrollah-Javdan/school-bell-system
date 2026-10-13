@@ -1,399 +1,544 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Bell Management System</title>
-    
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/components.css">
-    
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src 'self' blob: data:; img-src 'self' data:;">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سامانه مدیریت زنگ مدرسه</title>
+
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/features.css">
+  <link rel="stylesheet" href="css/notifications.css">
+
+  <!--
+    The dev server needs inline styles and a websocket for HMR, so the CSP is
+    relaxed only while Vite is serving the renderer.
+  -->
+  <script>
+    (function () {
+      var dev = /^https?:\/\/(localhost|127\.0\.0\.1):5173/.test(location.origin);
+      var csp = "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline'" + (dev ? " 'unsafe-eval'" : "") + "; " +
+        "style-src 'self' 'unsafe-inline'" + (dev ? " 'unsafe-eval'" : "") + "; " +
+        "img-src 'self' data: blob:; " +
+        "media-src 'self' data: blob:; " +
+        "font-src 'self' data:; " +
+        (dev ? "connect-src 'self' ws://localhost:5173 http://localhost:5173; " : "connect-src 'self'; ") +
+        "object-src 'none'; base-uri 'self'; form-action 'none'";
+      var meta = document.createElement('meta');
+      meta.httpEquiv = 'Content-Security-Policy';
+      meta.content = csp;
+      document.head.appendChild(meta);
+    })();
+  </script>
 </head>
 <body>
-    <header class="app-header">
-        <div class="header-content">
-            <div class="header-left">
-                <h1 class="app-title">
-                    <span class="app-icon">🔔</span>
-                    School Bell System
-                </h1>
-            </div>
-            <div class="header-right">
-                <div class="next-event-header" id="nextEventHeader">
-                    <span class="next-event-label">Next Event:</span>
-                    <span class="next-event-info" id="nextEventInfo">No upcoming events</span>
-                </div>
-                <div class="status-indicator" id="statusIndicator">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Ready</span>
-                </div>
-                <div class="current-time" id="currentTime">
-                    --:--:--
-                </div>
-                <button class="logout-btn" id="logoutBtn" onclick="app.logout()" title="Logout">
-                    <span class="logout-icon">🚪</span>
-                    <span class="logout-text">Logout</span>
+  <div class="app-shell">
+
+    <!-- ================= نوار کناری ================= -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand__mark" aria-hidden="true">🔔</span>
+        <span class="sidebar-brand__text">
+          <span class="sidebar-brand__title">زنگ مدرسه</span>
+          <span class="sidebar-brand__subtitle">سامانه مدیریتی</span>
+        </span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="بخش‌های برنامه">
+        <span class="sidebar-section-label">بخش‌ها</span>
+
+        <button class="nav-tab active" data-tab="dashboard" role="tab"
+                id="tab-dashboard" aria-controls="dashboard" aria-selected="true" tabindex="0">
+          <span class="nav-tab__icon" aria-hidden="true">📊</span>
+          <span class="nav-tab__label">داشبورد</span>
+        </button>
+
+        <button class="nav-tab" data-tab="schedule" role="tab"
+                id="tab-schedule" aria-controls="schedule" aria-selected="false" tabindex="-1">
+          <span class="nav-tab__icon" aria-hidden="true">📅</span>
+          <span class="nav-tab__label">برنامه هفتگی</span>
+        </button>
+
+        <button class="nav-tab" data-tab="audio" role="tab"
+                id="tab-audio" aria-controls="audio" aria-selected="false" tabindex="-1">
+          <span class="nav-tab__icon" aria-hidden="true">🎵</span>
+          <span class="nav-tab__label">کتابخانه صوتی</span>
+        </button>
+
+        <button class="nav-tab" data-tab="templates" role="tab"
+                id="tab-templates" aria-controls="templates" aria-selected="false" tabindex="-1">
+          <span class="nav-tab__icon" aria-hidden="true">📋</span>
+          <span class="nav-tab__label">الگوها</span>
+        </button>
+
+        <button class="nav-tab" data-tab="logs" role="tab"
+                id="tab-logs" aria-controls="logs" aria-selected="false" tabindex="-1">
+          <span class="nav-tab__icon" aria-hidden="true">📝</span>
+          <span class="nav-tab__label">گزارش فعالیت‌ها</span>
+        </button>
+
+        <button class="nav-tab" data-tab="settings" role="tab"
+                id="tab-settings" aria-controls="settings" aria-selected="false" tabindex="-1">
+          <span class="nav-tab__icon" aria-hidden="true">⚙️</span>
+          <span class="nav-tab__label">تنظیمات</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span class="sidebar-footer__version" id="appVersion">v—</span>
+        <button class="theme-toggle" id="themeToggle" type="button"
+                title="تغییر پوسته" aria-label="تغییر پوسته">
+          <span id="themeToggleIcon" aria-hidden="true">🖥️</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ================= ستون اصلی ================= -->
+    <div class="app-body">
+
+      <header class="topbar">
+        <div class="topbar__group">
+          <div class="next-event-header" id="nextEventHeader">
+            <span class="next-event-label">رویداد بعدی</span>
+            <span class="next-event-info no-events" id="nextEventInfo">رویدادی در پیش نیست</span>
+          </div>
+        </div>
+
+        <div class="topbar__spacer"></div>
+
+        <div class="topbar__group">
+          <div class="status-indicator" id="statusIndicator" role="status" aria-live="polite">
+            <span class="status-dot" data-status="ready"></span>
+            <span class="status-text">آماده</span>
+          </div>
+
+          <time class="current-time" id="currentTime">--:--:--</time>
+        </div>
+      </header>
+
+      <main class="app-main" id="appMain">
+
+        <!-- ---------- داشبورد ---------- -->
+        <section class="tab-content active" id="dashboard" role="tabpanel"
+                 aria-labelledby="tab-dashboard" tabindex="0">
+          <div class="page-container">
+            <div class="page-header">
+              <div class="page-header__text">
+                <p class="page-header__eyebrow">نمای کلی</p>
+                <h1 class="page-header__title">داشبورد</h1>
+                <p class="page-header__subtitle">وضعیت لحظه‌ای زنگ‌ها و برنامه مدرسه.</p>
+              </div>
+              <div class="page-header__actions">
+                <button class="btn btn-primary" id="addEventBtn">
+                  <span class="btn-icon" aria-hidden="true">➕</span>
+                  افزودن رویداد
                 </button>
+              </div>
             </div>
-        </div>
-    </header>
 
-    <nav class="app-nav">
-        <div class="nav-tabs">
-            <button class="nav-tab active" data-tab="dashboard">
-                <span class="tab-icon">📊</span>
-                Dashboard
-            </button>
-            <button class="nav-tab" data-tab="schedule">
-                <span class="tab-icon">📅</span>
-                Weekly Schedule
-            </button>
-            <button class="nav-tab" data-tab="audio">
-                <span class="tab-icon">🎵</span>
-                Audio Library
-            </button>
-            <button class="nav-tab" data-tab="templates">
-                <span class="tab-icon">📋</span>
-                Templates
-            </button>
-            <button class="nav-tab" data-tab="logs">
-                <span class="tab-icon">📝</span>
-                Activity Log
-            </button>
-            <button class="nav-tab" data-tab="settings">
-                <span class="tab-icon">⚙️</span>
-                Settings
-            </button>
-        </div>
-    </nav>
-
-    <main class="app-main">
-        
-        <section class="tab-content active" id="dashboard">
-            <div class="dashboard-container">
-                <div class="dashboard-header">
-                    <h2>Dashboard</h2>
-                    <div class="dashboard-actions">
-                        <button class="btn btn-primary" id="addEventBtn">
-                            <span class="btn-icon">➕</span>
-                            Add Event
-                        </button>
-                    </div>
+            <div class="dashboard-grid">
+              <div class="dashboard-card">
+                <div class="card-header">
+                  <h3><span aria-hidden="true">📅</span> برنامه امروز</h3>
+                  <span class="card-badge" id="todayBadge">۰ رویداد</span>
                 </div>
-                
-                <div class="dashboard-grid">
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3>Today's Schedule</h3>
-                            <span class="card-badge" id="todayBadge">0 events</span>
-                        </div>
-                        <div class="card-content">
-                            <div class="schedule-preview" id="todaySchedule">
-                                <div class="empty-state">
-                                    <span class="empty-icon">📅</span>
-                                    <p>No events scheduled for today</p>
-                                </div>
-                            </div>
-                        </div>
+                <div class="card-content">
+                  <div class="schedule-preview" id="todaySchedule">
+                    <div class="empty-state">
+                      <span class="empty-icon" aria-hidden="true">📅</span>
+                      <p>امروز هیچ رویدادی زمان‌بندی نشده است</p>
                     </div>
-
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3>System Status</h3>
-                        </div>
-                        <div class="card-content">
-                            <div class="status-grid">
-                                <div class="status-item">
-                                    <span class="status-label">Templates</span>
-                                    <span class="status-value" id="templateCount">0</span>
-                                </div>
-                                <div class="status-item">
-                                    <span class="status-label">Total Events</span>
-                                    <span class="status-value" id="totalEvents">0</span>
-                                </div>
-                                <div class="status-item">
-                                    <span class="status-label">System Volume</span>
-                                    <span class="status-value" id="systemVolume">80%</span>
-                                </div>
-                                <div class="status-item">
-                                    <span class="status-label">Scheduler</span>
-                                    <span class="status-value" id="schedulerStatus">Ready</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3>Next Scheduled Event</h3>
-                            <span class="card-badge" id="nextEventBadge">Upcoming</span>
-                        </div>
-                        <div class="card-content">
-                            <div class="next-event-display" id="nextEventDisplay">
-                                <div class="empty-state">
-                                    <span class="empty-icon">⏰</span>
-                                    <p>No upcoming events scheduled</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                  </div>
                 </div>
+              </div>
+
+              <div class="dashboard-card">
+                <div class="card-header">
+                  <h3><span aria-hidden="true">📈</span> وضعیت سامانه</h3>
+                </div>
+                <div class="card-content">
+                  <div class="status-grid">
+                    <div class="status-item">
+                      <span class="status-label">الگوها</span>
+                      <span class="status-value" id="templateCount">۰</span>
+                    </div>
+                    <div class="status-item">
+                      <span class="status-label">کل رویدادها</span>
+                      <span class="status-value" id="totalEvents">۰</span>
+                    </div>
+                    <div class="status-item">
+                      <span class="status-label">بلندی صدا</span>
+                      <span class="status-value" id="systemVolume">۸۰٪</span>
+                    </div>
+                    <div class="status-item">
+                      <span class="status-label">زمان‌بند</span>
+                      <span class="status-value" id="schedulerStatus">آماده</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboard-card">
+                <div class="card-header">
+                  <h3><span aria-hidden="true">⏰</span> نزدیک‌ترین زنگ</h3>
+                  <span class="card-badge" id="nextEventBadge">در پیش</span>
+                </div>
+                <div class="card-content">
+                  <div class="next-event-display" id="nextEventDisplay">
+                    <div class="empty-state">
+                      <span class="empty-icon" aria-hidden="true">⏰</span>
+                      <p>رویدادی در پیش نیست</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
         </section>
 
-        <section class="tab-content" id="schedule">
-            <div class="schedule-container">
-                <div class="schedule-header">
-                    <h2>Weekly Schedule</h2>
-                    <div class="schedule-actions">
-                        <button class="btn btn-secondary" id="applyTemplateBtn">
-                            <span class="btn-icon">📋</span>
-                            Apply Template
-                        </button>
-                        <button class="btn btn-primary" id="addScheduleEventBtn">
-                            <span class="btn-icon">➕</span>
-                            Add Event
-                        </button>
-                    </div>
-                </div>
-
-                <div class="day-tabs">
-                    <button class="day-tab" data-day="monday">Monday</button>
-                    <button class="day-tab" data-day="tuesday">Tuesday</button>
-                    <button class="day-tab" data-day="wednesday">Wednesday</button>
-                    <button class="day-tab" data-day="thursday">Thursday</button>
-                    <button class="day-tab" data-day="friday">Friday</button>
-                    <button class="day-tab" data-day="saturday">Saturday</button>
-                    <button class="day-tab" data-day="sunday">Sunday</button>
-                </div>
-
-                <div class="schedule-content">
-                    <div class="schedule-day" id="scheduleDay">
-                        <div class="empty-state">
-                            <span class="empty-icon">📅</span>
-                            <p>No events scheduled for this day</p>
-                            <button class="btn btn-outline" id="addFirstEventBtn">Add First Event</button>
-                        </div>
-                    </div>
-                </div>
+        <!-- ---------- برنامه هفتگی ---------- -->
+        <section class="tab-content" id="schedule" role="tabpanel"
+                 aria-labelledby="tab-schedule" tabindex="0" hidden>
+          <div class="page-container">
+            <div class="page-header">
+              <div class="page-header__text">
+                <p class="page-header__eyebrow">زمان‌بندی</p>
+                <h1 class="page-header__title">برنامه هفتگی</h1>
+                <p class="page-header__subtitle">روز مورد نظر را انتخاب کنید تا زنگ‌های آن را ببینید و ویرایش کنید.</p>
+              </div>
+              <div class="page-header__actions">
+                <button class="btn btn-secondary" id="applyTemplateBtn">
+                  <span class="btn-icon" aria-hidden="true">📋</span>
+                  اعمال الگو
+                </button>
+                <button class="btn btn-primary" id="addScheduleEventBtn">
+                  <span class="btn-icon" aria-hidden="true">➕</span>
+                  افزودن رویداد
+                </button>
+              </div>
             </div>
+
+            <div class="day-tabs" id="dayTabs" role="tablist" aria-label="روزهای هفته">
+              <button class="day-tab" data-day="monday" role="tab" aria-selected="false" tabindex="-1">دوشنبه</button>
+              <button class="day-tab" data-day="tuesday" role="tab" aria-selected="false" tabindex="-1">سه‌شنبه</button>
+              <button class="day-tab" data-day="wednesday" role="tab" aria-selected="false" tabindex="-1">چهارشنبه</button>
+              <button class="day-tab" data-day="thursday" role="tab" aria-selected="false" tabindex="-1">پنج‌شنبه</button>
+              <button class="day-tab" data-day="friday" role="tab" aria-selected="false" tabindex="-1">جمعه</button>
+              <button class="day-tab" data-day="saturday" role="tab" aria-selected="false" tabindex="-1">شنبه</button>
+              <button class="day-tab" data-day="sunday" role="tab" aria-selected="false" tabindex="-1">یکشنبه</button>
+            </div>
+
+            <div class="schedule-day" id="scheduleDay">
+              <div class="empty-state">
+                <span class="empty-icon" aria-hidden="true">📅</span>
+                <p>برای این روز رویدادی ثبت نشده است</p>
+                <button class="btn btn-outline" id="addFirstEventBtn">افزودن نخستین رویداد</button>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section class="tab-content" id="audio">
-            <div class="audio-container">
-                <div class="audio-header">
-                    <h2>Audio Library</h2>
-                    <div class="audio-actions">
-                        <div class="bulk-actions" id="bulkActions" style="display: none;">
-                            <button class="btn btn-outline btn-sm" id="selectAllBtn">
-                                <span class="btn-icon">☑️</span>
-                                Select All
-                            </button>
-                            <button class="btn btn-outline btn-sm" id="selectNoneBtn">
-                                <span class="btn-icon">⬜</span>
-                                Select None
-                            </button>
-                            <button class="btn btn-danger btn-sm" id="bulkDeleteBtn">
-                                <span class="btn-icon">🗑️</span>
-                                Delete Selected
-                            </button>
-                            <span class="selected-count" id="selectedCount">0 selected</span>
-                        </div>
-                        <button class="btn btn-primary" id="uploadAudioBtn">
-                            <span class="btn-icon">⬆️</span>
-                            Upload Audio
-                        </button>
-                    </div>
+        <!-- ---------- کتابخانه صوتی ---------- -->
+        <section class="tab-content" id="audio" role="tabpanel"
+                 aria-labelledby="tab-audio" tabindex="0" hidden>
+          <div class="page-container">
+            <div class="page-header">
+              <div class="page-header__text">
+                <p class="page-header__eyebrow">رسانه</p>
+                <h1 class="page-header__title">کتابخانه صوتی</h1>
+                <p class="page-header__subtitle">فایل‌های زنگی مورد استفاده در برنامه‌ها را مدیریت کنید.</p>
+              </div>
+              <div class="page-header__actions">
+                <div class="bulk-actions" id="bulkActions" hidden>
+                  <button class="btn btn-outline btn-sm" id="selectAllBtn">انتخاب همه</button>
+                  <button class="btn btn-outline btn-sm" id="selectNoneBtn">برداشتن انتخاب</button>
+                  <button class="btn btn-danger btn-sm" id="bulkDeleteBtn">حذف انتخاب‌شده‌ها</button>
+                  <span class="selected-count" id="selectedCount" role="status" aria-live="polite">۰ انتخاب‌شده</span>
                 </div>
-
-                <div class="audio-content">
-                    <div class="audio-grid" id="audioGrid">
-                        <div class="empty-state">
-                            <span class="empty-icon">🎵</span>
-                            <p>No audio files uploaded yet</p>
-                            <button class="btn btn-outline" id="uploadFirstAudioBtn">Upload First Audio</button>
-                        </div>
-                    </div>
-                </div>
+                <button class="btn btn-primary" id="uploadAudioBtn">
+                  <span class="btn-icon" aria-hidden="true">⬆️</span>
+                  بارگذاری صوت
+                </button>
+              </div>
             </div>
+
+            <div class="audio-grid" id="audioGrid">
+              <div class="empty-state">
+                <span class="empty-icon" aria-hidden="true">🎵</span>
+                <p>هنوز هیچ فایل صوتی بارگذاری نشده است</p>
+                <button class="btn btn-outline" id="uploadFirstAudioBtn">بارگذاری نخستین فایل</button>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section class="tab-content" id="templates">
-            <div class="templates-container">
-                <div class="templates-header">
-                    <h2>Schedule Templates</h2>
-                    <div class="templates-actions">
-                        <button class="btn btn-primary" id="createTemplateBtn">
-                            <span class="btn-icon">➕</span>
-                            Create Template
-                        </button>
-                    </div>
-                </div>
-
-                <div class="templates-content">
-                    <div class="templates-grid" id="templatesGrid">
-                        <div class="empty-state">
-                            <span class="empty-icon">📋</span>
-                            <p>No templates created yet</p>
-                            <button class="btn btn-outline" id="createFirstTemplateBtn">Create First Template</button>
-                        </div>
-                    </div>
-                </div>
+        <!-- ---------- الگوها ---------- -->
+        <section class="tab-content" id="templates" role="tabpanel"
+                 aria-labelledby="tab-templates" tabindex="0" hidden>
+          <div class="page-container">
+            <div class="page-header">
+              <div class="page-header__text">
+                <p class="page-header__eyebrow">استفاده مجدد</p>
+                <h1 class="page-header__title">الگوهای زمان‌بندی</h1>
+                <p class="page-header__subtitle">یک الگوی زنگ را یک‌بار بسازید و در هر روزی دوباره استفاده کنید.</p>
+              </div>
+              <div class="page-header__actions">
+                <button class="btn btn-primary" id="createTemplateBtn">
+                  <span class="btn-icon" aria-hidden="true">➕</span>
+                  ساخت الگو
+                </button>
+              </div>
             </div>
+
+            <div class="templates-grid" id="templatesGrid">
+              <div class="empty-state">
+                <span class="empty-icon" aria-hidden="true">📋</span>
+                <p>هنوز الگویی ساخته نشده است</p>
+                <button class="btn btn-outline" id="createFirstTemplateBtn">ساخت نخستین الگو</button>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section class="tab-content" id="logs">
-            <div class="logs-container">
-                <div class="logs-header">
-                    <h2>Activity Log</h2>
-                    <div class="logs-actions">
-                        <button class="btn btn-secondary" id="clearLogsBtn">
-                            <span class="btn-icon">🗑️</span>
-                            Clear Logs
-                        </button>
-                        <button class="btn btn-secondary" id="exportLogsBtn">
-                            <span class="btn-icon">💾</span>
-                            Export Logs
-                        </button>
-                    </div>
-                </div>
-
-                <div class="logs-content">
-                    <div class="logs-list" id="logsList">
-                        <div class="empty-state">
-                            <span class="empty-icon">📝</span>
-                            <p>No activity logged yet</p>
-                        </div>
-                    </div>
-                </div>
+        <!-- ---------- گزارش فعالیت‌ها ---------- -->
+        <section class="tab-content" id="logs" role="tabpanel"
+                 aria-labelledby="tab-logs" tabindex="0" hidden>
+          <div class="page-container">
+            <div class="page-header">
+              <div class="page-header__text">
+                <p class="page-header__eyebrow">تاریخچه</p>
+                <h1 class="page-header__title">گزارش فعالیت‌ها</h1>
+                <p class="page-header__subtitle">همه تغییرات برنامه و پخش‌هایی که سامانه ثبت کرده است.</p>
+              </div>
+              <div class="page-header__actions">
+                <button class="btn btn-secondary" id="exportLogsBtn">
+                  <span class="btn-icon" aria-hidden="true">💾</span>
+                  خروجی گرفتن
+                </button>
+                <button class="btn btn-danger" id="clearLogsBtn">
+                  <span class="btn-icon" aria-hidden="true">🗑️</span>
+                  پاک کردن گزارش
+                </button>
+              </div>
             </div>
+
+            <div class="dashboard-card">
+              <div class="logs-list" id="logsList">
+                <div class="empty-state">
+                  <span class="empty-icon" aria-hidden="true">📝</span>
+                  <p>هنوز فعالیتی ثبت نشده است</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section class="tab-content" id="settings">
-            <div class="settings-container">
-                <div class="settings-header">
-                    <h2>Settings</h2>
-                </div>
-
-                <div class="settings-content">
-                    <div class="settings-groups">
-                        <div class="settings-group">
-                            <h3>Audio Settings</h3>
-                            <div class="setting-item">
-                                <label for="volumeSlider">System Volume</label>
-                                <div class="volume-control">
-                                    <input type="range" id="volumeSlider" min="0" max="100" value="80">
-                                    <span id="volumeValue">80%</span>
-                                </div>
-                            </div>
-                            <div class="setting-item">
-                                <label for="audioPath">Audio Files Path</label>
-                                <div class="path-control">
-                                    <input type="text" id="audioPath" readonly>
-                                    <button class="btn btn-outline" id="changePathBtn">Change</button>
-                                </div>
-                            </div>
-                            <div class="setting-item">
-                                <label for="audioRepeatInterval">Audio Repeat Interval (seconds)</label>
-                                <div class="interval-control">
-                                    <input type="number" id="audioRepeatInterval" min="0" max="30" step="0.5" value="3">
-                                    <span class="interval-help">Time between repeated audio files</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="settings-group">
-                            <h3>Application Settings</h3>
-                            <div class="setting-item">
-                                <label>
-                                    <input type="checkbox" id="autoStartCheckbox">
-                                    Start automatically with system
-                                </label>
-                            </div>
-                            <div class="setting-item">
-                                <label for="logLevel">Log Level</label>
-                                <select id="logLevel">
-                                    <option value="error">Error</option>
-                                    <option value="warn">Warning</option>
-                                    <option value="info" selected>Info</option>
-                                    <option value="debug">Debug</option>
-                                </select>
-                            </div>
-                            <div class="setting-item">
-                                <label for="maxLogEntries">Maximum Log Entries</label>
-                                <input type="number" id="maxLogEntries" min="100" max="10000" value="1000">
-                            </div>
-                        </div>
-
-                        <div class="settings-group">
-                            <h3>Security Settings</h3>
-                            <div class="setting-actions">
-                                <button class="btn btn-outline" id="changePasswordBtn">
-                                    <span class="btn-icon">🔑</span>
-                                    Change Password
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="settings-group">
-                            <h3>Application Control</h3>
-                            <div class="setting-actions">
-                                <button class="btn btn-outline" id="restartAppBtn">
-                                    <span class="btn-icon">🔄</span>
-                                    Restart Application
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="settings-group">
-                            <h3>Data Management</h3>
-                            <div class="setting-actions">
-                                <button class="btn btn-outline" id="exportDataBtn">
-                                    <span class="btn-icon">💾</span>
-                                    Export All Data
-                                </button>
-                                <button class="btn btn-outline" id="importDataBtn">
-                                    <span class="btn-icon">📁</span>
-                                    Import Data
-                                </button>
-                                <button class="btn btn-danger" id="resetDataBtn">
-                                    <span class="btn-icon">⚠️</span>
-                                    Reset All Data
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- ---------- تنظیمات ---------- -->
+        <section class="tab-content" id="settings" role="tabpanel"
+                 aria-labelledby="tab-settings" tabindex="0" hidden>
+          <div class="page-container">
+            <div class="page-header">
+              <div class="page-header__text">
+                <p class="page-header__eyebrow">ترجیحات</p>
+                <h1 class="page-header__title">تنظیمات</h1>
+                <p class="page-header__subtitle">صدا، ظاهر برنامه و مدیریت داده‌ها.</p>
+              </div>
             </div>
-        </section>
-    </main>
 
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
-        <p>Loading...</p>
+            <div class="settings-groups">
+
+              <div class="settings-group">
+                <div class="settings-group__header">
+                  <span aria-hidden="true">🎨</span>
+                  <h3>ظاهر برنامه</h3>
+                </div>
+                <div class="settings-group__body">
+                  <div class="setting-item">
+                    <label for="themeSelect">پوسته</label>
+                    <select id="themeSelect">
+                      <option value="system">مطابق سیستم‌عامل</option>
+                      <option value="light">روشن</option>
+                      <option value="dark">تیره</option>
+                    </select>
+                    <p class="setting-hint">یک پوسته ثابت انتخاب کنید یا از تنظیمات سیستم‌عامل پیروی کنید.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-group">
+                <div class="settings-group__header">
+                  <span aria-hidden="true">🔊</span>
+                  <h3>صدا</h3>
+                </div>
+                <div class="settings-group__body">
+                  <div class="setting-item">
+                    <label for="volumeSlider">بلندی صدا</label>
+                    <div class="volume-control">
+                      <input type="range" id="volumeSlider" min="0" max="100" value="80"
+                             aria-describedby="volumeValue">
+                      <span id="volumeValue">۸۰٪</span>
+                    </div>
+                  </div>
+
+                  <div class="setting-item">
+                    <label for="audioPath">مسیر فایل‌های صوتی</label>
+                    <div class="path-control">
+                      <input type="text" id="audioPath" readonly>
+                      <button class="btn btn-outline" id="changePathBtn">تغییر</button>
+                    </div>
+                  </div>
+
+                  <div class="setting-item">
+                    <label for="audioRepeatInterval">فاصله تکرار (ثانیه)</label>
+                    <div class="interval-control">
+                      <input type="number" id="audioRepeatInterval" min="0" max="30" step="0.5" value="3">
+                      <span class="interval-help">مکث میان پخش‌های پیاپی یک زنگ</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-group">
+                <div class="settings-group__header">
+                  <span aria-hidden="true">⚙️</span>
+                  <h3>برنامه</h3>
+                </div>
+                <div class="settings-group__body">
+                  <div class="setting-item setting-item--inline">
+                    <label class="checkbox-row" for="autoStartCheckbox">
+                      <input type="checkbox" id="autoStartCheckbox">
+                      <span>اجرای خودکار با روشن شدن ویندوز</span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item">
+                    <label for="logLevel">سطح ثبت گزارش</label>
+                    <select id="logLevel">
+                      <option value="error">فقط خطا</option>
+                      <option value="warn">هشدار</option>
+                      <option value="info" selected>اطلاعات</option>
+                      <option value="debug">جزئیات فنی</option>
+                    </select>
+                  </div>
+
+                  <div class="setting-item">
+                    <label for="maxLogEntries">بیشینه تعداد گزارش‌ها</label>
+                    <input type="number" id="maxLogEntries" min="100" max="10000" step="100" value="1000">
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-group">
+                <div class="settings-group__header">
+                  <span aria-hidden="true">⬇️</span>
+                  <h3>به‌روزرسانی برنامه</h3>
+                </div>
+                <div class="settings-group__body">
+                  <div class="update-status" id="updateStatus" role="status" aria-live="polite">
+                    <span class="update-status__icon" id="updateStatusIcon" aria-hidden="true">✔️</span>
+                    <span class="update-status__text" id="updateStatusText">برنامه شما به‌روز است.</span>
+                  </div>
+
+                  <div class="update-progress" id="updateProgress" hidden>
+                    <div class="update-progress__bar"><span id="updateProgressBar"></span></div>
+                    <span class="update-progress__label" id="updateProgressLabel">۰٪</span>
+                  </div>
+
+                  <p class="setting-hint">
+                    نسخه نصب‌شده: <span id="currentVersion" dir="ltr">—</span>
+                    &middot; به‌روزرسانی‌ها از اینترنت دریافت می‌شوند و نیازی به نصب مجدد نیست.
+                    برنامه‌ها، فایل‌های صوتی و تنظیمات شما دست‌نخورده باقی می‌مانند.
+                  </p>
+
+                  <div class="setting-actions" style="margin-top: var(--space-4);">
+                    <button class="btn btn-primary" id="checkUpdateBtn">
+                      <span class="btn-icon" aria-hidden="true">🔄</span>
+                      بررسی نسخه جدید
+                    </button>
+                    <button class="btn btn-secondary" id="installUpdateBtn" hidden>
+                      <span class="btn-icon" aria-hidden="true">⬇️</span>
+                      نصب و راه‌اندازی مجدد
+                    </button>
+                    <button class="btn btn-outline" id="openDataFolderBtn">
+                      <span class="btn-icon" aria-hidden="true">📁</span>
+                      باز کردن پوشه داده‌ها
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-group">
+                <div class="settings-group__header">
+                  <span aria-hidden="true">🗄️</span>
+                  <h3>مدیریت داده‌ها</h3>
+                </div>
+                <div class="settings-group__body">
+                  <div class="setting-actions">
+                    <button class="btn btn-outline" id="exportDataBtn">
+                      <span class="btn-icon" aria-hidden="true">💾</span>
+                      خروجی کامل داده‌ها
+                    </button>
+                    <button class="btn btn-outline" id="importDataBtn">
+                      <span class="btn-icon" aria-hidden="true">📁</span>
+                      بازیابی داده‌ها
+                    </button>
+                    <button class="btn btn-danger" id="resetDataBtn">
+                      <span class="btn-icon" aria-hidden="true">⚠️</span>
+                      بازنشانی همه داده‌ها
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-group">
+                <div class="settings-group__header">
+                  <span aria-hidden="true">🔄</span>
+                  <h3>راه‌اندازی مجدد</h3>
+                </div>
+                <div class="settings-group__body">
+                  <div class="setting-actions">
+                    <button class="btn btn-outline" id="restartAppBtn">
+                      <span class="btn-icon" aria-hidden="true">🔄</span>
+                      راه‌اندازی مجدد برنامه
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </main>
     </div>
+  </div>
 
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal" id="modal">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Modal Title</h3>
-                <button class="modal-close" id="modalClose">&times;</button>
-            </div>
-            <div class="modal-body" id="modalBody">
-            </div>
-            <div class="modal-footer" id="modalFooter">
-                <button class="btn btn-secondary" id="modalCancel">Cancel</button>
-                <button class="btn btn-primary" id="modalConfirm">Confirm</button>
-            </div>
-        </div>
+  <!-- ================= لایه‌های رویی ================= -->
+  <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite">
+    <div class="loading-spinner" aria-hidden="true"></div>
+    <p>در حال بارگذاری…</p>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">پنجره</h2>
+        <button class="modal-close" id="modalClose" type="button" aria-label="بستن پنجره">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter">
+        <button class="btn btn-secondary" id="modalCancel" type="button">انصراف</button>
+        <button class="btn btn-primary" id="modalConfirm" type="button">تأیید</button>
+      </div>
     </div>
+  </div>
 
-    <script src="js/html5-audio.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/schedule.js"></script>
-    <script src="js/audio.js"></script>
-    <script src="js/settings.js"></script>
-    <script src="js/templates.js"></script>
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="sr-only" id="liveRegion" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
