@@ -1,0 +1,66 @@
+name: Windows Release
+
+# Tag a version and push:
+#   git tag v1.0.3 && git push origin v1.0.3
+#
+# Builds the Windows installer and publishes it together with latest.yml,
+# which electron-updater needs in order to deliver in-app updates.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Bundle renderer (Vite)
+        run: npm run build:renderer
+
+      - name: Build Windows installer
+        run: npx electron-builder --win --x64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Verify update metadata exists
+        shell: pwsh
+        run: |
+          if (-not (Test-Path dist\latest.yml)) {
+            Write-Error "dist\latest.yml is missing - auto-update would break"
+            exit 1
+          }
+          Get-Content dist\latest.yml
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: سامانه زنگ مدرسه ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          # latest.yml must be attached, otherwise the in-app updater
+          # cannot discover this release.
+          files: |
+            dist/*.exe
+            dist/latest.yml
+            dist/*.blockmap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
