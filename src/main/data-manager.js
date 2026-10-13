@@ -43,8 +43,12 @@ class DataManager {
     try {
       await this.loadData();
       const migrationResult = await this.ensureAudioDirectorySetup();
+      // The bundled bells ship with the app, so install them on every start.
+      // Adding files never disturbs an existing schedule, which means an
+      // upgraded install gains the bells too - not only a brand new one.
+      const audioAdded = await this.installDefaultAudio();
       const seeded = await this.seedIfFirstRun();
-      return { success: true, migrationResult, seeded };
+      return { success: true, migrationResult, audioAdded, seeded };
     } catch (error) {
       throw error;
     }

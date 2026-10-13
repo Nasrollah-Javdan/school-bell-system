@@ -1,6 +1,6 @@
 {
   "name": "school-bell-system",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Automated school bell scheduling system with audio playback and authentication",
   "main": "src/main/main.js",
   "homepage": "https://github.com/Nasrollah-Javdan/school-bell-system",
@@ -85,7 +85,7 @@
         ]
       },
       {
-        "from": "build/tray-icon.png", 
+        "from": "build/tray-icon.png",
         "to": "tray-icon.png"
       }
     ],
